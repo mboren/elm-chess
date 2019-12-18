@@ -9,7 +9,7 @@ import Element.Font as Font
 import EverySet exposing (EverySet)
 import History
 import Html exposing (Html)
-import Piece exposing (Piece, toString)
+import Piece exposing (Piece)
 import Player exposing (Player(..))
 import Position exposing (Position)
 import Square exposing (File, Rank, Square)
@@ -59,15 +59,11 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         SelectPiece square ->
-            let
-                squareContent =
-                    Position.get model.position square
-            in
             { model | status = SelectingMove square (Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position square) }
 
         MoveTo square ->
             case model.status of
-                SelectingMove start possibleMoves ->
+                SelectingMove start _ ->
                     let
                         newPosition =
                             Position.makeMove model.position start square
@@ -84,14 +80,7 @@ update msg model =
 
 
 
---MoveTo square ->
---    model
 -- VIEW
-
-
-rowToString : List (Maybe Piece) -> String
-rowToString row =
-    row |> List.map (Maybe.map toString) |> List.map (Maybe.withDefault "#") |> String.join ","
 
 
 view : Model -> Html Msg
