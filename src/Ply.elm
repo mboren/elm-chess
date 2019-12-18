@@ -1,5 +1,6 @@
 module Ply exposing (..)
 
+import EverySet
 import Piece exposing (Piece)
 import Player exposing (Player)
 import Square exposing (Square)
@@ -137,3 +138,54 @@ toString move =
 
         KingsideCastle _ ->
             "0-0"
+
+
+toThreat : Ply -> Maybe Square
+toThreat ply =
+    case ply of
+        StandardMove data ->
+            Just data.end
+
+        QueensideCastle _ ->
+            Nothing
+
+        KingsideCastle _ ->
+            Nothing
+
+
+toSquareForMoveSelection : Ply -> Square
+toSquareForMoveSelection ply =
+    case ply of
+        StandardMove data ->
+            data.end
+
+        QueensideCastle player ->
+            Square (Player.firstRank player) 2
+
+        KingsideCastle player ->
+            Square (Player.firstRank player) 6
+
+
+getMoveAssociatedWithSquare : List Ply -> Square -> Maybe Ply
+getMoveAssociatedWithSquare plies square =
+    plies
+        |> List.map (\ply -> ( toSquareForMoveSelection ply, ply ))
+        |> List.filter
+            (\( sq, ply ) ->
+                if sq == square then
+                    True
+
+                else
+                    False
+            )
+        |> (\l ->
+                case l of
+                    [] ->
+                        Nothing
+
+                    ( sq, ply ) :: [] ->
+                        Just ply
+
+                    h :: t ->
+                        Nothing
+           )

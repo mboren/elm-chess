@@ -11,6 +11,7 @@ import History
 import Html exposing (Html)
 import Piece exposing (Piece)
 import Player exposing (Player(..))
+import Ply exposing (Ply, toSquareForMoveSelection)
 import Position exposing (Position)
 import Square exposing (File, Rank, Square)
 
@@ -30,7 +31,7 @@ main =
 
 type GameStatus
     = SelectingPiece
-    | SelectingMove Square (EverySet Square)
+    | SelectingMove Square (EverySet Ply)
 
 
 type alias Model =
@@ -52,7 +53,7 @@ init =
 
 type Msg
     = SelectPiece Square
-    | MoveTo Square
+    | MoveTo Ply
 
 
 update : Msg -> Model -> Model
@@ -61,12 +62,12 @@ update msg model =
         SelectPiece square ->
             { model | status = SelectingMove square (Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position square) }
 
-        MoveTo square ->
+        MoveTo ply ->
             case model.status of
                 SelectingMove start _ ->
                     let
                         newPosition =
-                            Position.makeMove model.position start square
+                            Position.makeMove model.position ply
                     in
                     case newPosition of
                         Nothing ->
@@ -200,7 +201,7 @@ squareColor selectedSquare possibleMoves currentSquare =
         whiteSquareColor
 
 
-squareEl : Element.Length -> EverySet Square -> EverySet Square -> Maybe Square -> Rank -> File -> Maybe Piece -> Element Msg
+squareEl : Element.Length -> EverySet Square -> EverySet Ply -> Maybe Square -> Rank -> File -> Maybe Piece -> Element Msg
 squareEl size selectablePieceSquares possibleMoves selectedSquare rank file maybePiece =
     let
         mainFontColor =
@@ -216,18 +217,26 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
                         WhitePlayer ->
                             Element.rgb255 255 255 255
 
+        moveSquares =
+            EverySet.map Ply.toSquareForMoveSelection possibleMoves
+
         squareClickEvent =
             if EverySet.member (Square rank file) selectablePieceSquares then
                 [ Element.Events.onClick (SelectPiece (Square rank file)) ]
 
-            else if EverySet.member (Square rank file) possibleMoves then
-                [ Element.Events.onClick (MoveTo (Square rank file)) ]
+            else if EverySet.member (Square rank file) moveSquares then
+                case Ply.getMoveAssociatedWithSquare (EverySet.toList possibleMoves) (Square rank file) of
+                    Nothing ->
+                        []
+
+                    Just ply ->
+                        [ Element.Events.onClick (MoveTo ply) ]
 
             else
                 []
     in
     Element.el
-        ([ Background.color (squareColor selectedSquare possibleMoves (Square rank file))
+        ([ Background.color (squareColor selectedSquare (EverySet.map toSquareForMoveSelection possibleMoves) (Square rank file))
          , Font.color mainFontColor
          , Font.center
          , Font.glow (Element.rgb 0 0 0) 1.0
