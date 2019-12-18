@@ -220,7 +220,7 @@ getPossiblePawnMoves player square position =
                             abs (data.start.file - square.file)
 
                         fifthRank =
-                            (Player.lastRank player - (3 * direction))
+                            Player.lastRank player - (3 * direction)
                     in
                     if data.piece.kind == Piece.Pawn && prevDistance == 2 && fileDelta == 1 && square.file == fifthRank then
                         Just (Square (square.rank + direction) data.end.file)
