@@ -214,10 +214,10 @@ getPossiblePawnMoves player square position =
                 Just (Ply.StandardMove data) ->
                     let
                         prevDistance =
-                            abs (data.end.rank - data.start.rank) |> Debug.log "prevdist"
+                            abs (data.end.rank - data.start.rank)
 
                         fileDelta =
-                            abs (data.start.file - square.file) |> Debug.log "fileDelta"
+                            abs (data.start.file - square.file)
 
                         fifthRank =
                             (Player.lastRank player - (3 * direction))
