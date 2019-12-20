@@ -117,10 +117,10 @@ drawStatus model =
     , ( "hasKingMoved (black)", History.hasKingMoved BlackPlayer model.position.history )
     , ( "hasQueensideRookMoved (white)", History.hasQueensideRookMoved WhitePlayer model.position.history )
     , ( "hasQueensideRookMoved (black)", History.hasQueensideRookMoved BlackPlayer model.position.history )
-    , ( "canKingsideCastle", Position.canKingsideCastle model.position )
-    , ( "canQueensideCastle", Position.canQueensideCastle model.position )
+    --, ( "canKingsideCastle", Position.canKingsideCastle model.position )
+    --, ( "canQueensideCastle", Position.canQueensideCastle model.position )
     , ( "inCheck (white)", Position.isPlayerInCheck WhitePlayer model.position )
-    , ( "inCheck (black)", Position.isPlayerInCheck BlackPlayer model.position )
+    --, ( "inCheck (black)", Position.isPlayerInCheck BlackPlayer model.position )
     ]
         |> List.map (\( text, flag ) -> text ++ ": " ++ boolToString flag)
         |> List.map Element.text
