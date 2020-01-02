@@ -498,23 +498,6 @@ makeMove position ply =
                             Player.firstRank player
 
                         kingFile =
-                            6
-
-                        rookFile =
-                            5
-                    in
-                    position.board
-                        |> Array2D.set rank kingFile (Just (Piece Piece.King player))
-                        |> Array2D.set rank rookFile (Just (Piece Piece.Rook player))
-                        |> Array2D.set rank 5 Nothing
-                        |> Array2D.set rank 0 Nothing
-
-                Ply.KingsideCastle player ->
-                    let
-                        rank =
-                            Player.firstRank player
-
-                        kingFile =
                             2
 
                         rookFile =
@@ -523,7 +506,24 @@ makeMove position ply =
                     position.board
                         |> Array2D.set rank kingFile (Just (Piece Piece.King player))
                         |> Array2D.set rank rookFile (Just (Piece Piece.Rook player))
-                        |> Array2D.set rank 5 Nothing
+                        |> Array2D.set rank 4 Nothing
+                        |> Array2D.set rank 0 Nothing
+
+                Ply.KingsideCastle player ->
+                    let
+                        rank =
+                            Player.firstRank player
+
+                        kingFile =
+                            6
+
+                        rookFile =
+                            5
+                    in
+                    position.board
+                        |> Array2D.set rank kingFile (Just (Piece Piece.King player))
+                        |> Array2D.set rank rookFile (Just (Piece Piece.Rook player))
+                        |> Array2D.set rank 4 Nothing
                         |> Array2D.set rank 7 Nothing
 
                 Ply.StandardMove data ->
