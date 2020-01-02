@@ -381,7 +381,7 @@ generateAllMoves : Player -> Position -> EverySet Ply
 generateAllMoves player position =
     getSquaresOccupiedByPlayer player position
         |> EverySet.toList
-        |> List.map (getPossibleMoves player position)
+        |> List.map (getPossibleMoves False player position)
         |> List.map EverySet.toList
         |> List.concat
         |> EverySet.fromList
@@ -389,7 +389,7 @@ generateAllMoves player position =
 
 getPossibleMovesForCurrentPlayer : Position -> Square -> EverySet Ply
 getPossibleMovesForCurrentPlayer position square =
-    getPossibleMoves position.playerToMove position square
+    getPossibleMoves True position.playerToMove position square
 
 
 wouldMoveLeavePlayerInCheck : Player -> Position -> Ply -> Bool
@@ -410,12 +410,12 @@ wouldMoveLeavePlayerInCheck player position ply =
 
 getPossibleMovesForCurrentPlayerWithoutCheck : Position -> Square -> EverySet Ply
 getPossibleMovesForCurrentPlayerWithoutCheck position square =
-    getPossibleMoves position.playerToMove position square
+    getPossibleMoves True position.playerToMove position square
         |> EverySet.filter (not << wouldMoveLeavePlayerInCheck position.playerToMove position)
 
 
-getPossibleMoves : Player -> Position -> Square -> EverySet Ply
-getPossibleMoves player position square =
+getPossibleMoves : Bool -> Player -> Position -> Square -> EverySet Ply
+getPossibleMoves includeCastling player position square =
     let
         currentPiece =
             get position square
@@ -440,14 +440,14 @@ getPossibleMoves player position square =
                 Piece.King ->
                     let
                         queenSideCastle =
-                            if player == position.playerToMove && canQueensideCastle position then
+                            if includeCastling && player == position.playerToMove && canQueensideCastle position then
                                 [ ( 0, -2 ) ]
 
                             else
                                 []
 
                         kingSideCastle =
-                            if player == position.playerToMove && canKingsideCastle position then
+                            if includeCastling && player == position.playerToMove && canKingsideCastle position then
                                 [ ( 0, 2 ) ]
 
                             else
