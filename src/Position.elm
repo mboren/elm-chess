@@ -441,29 +441,29 @@ getPossibleMoves includeCastling player position square =
                     let
                         queenSideCastle =
                             if includeCastling && player == position.playerToMove && canQueensideCastle position then
-                                [ ( 0, -2 ) ]
+                                [Ply.QueensideCastle player]
 
                             else
                                 []
 
                         kingSideCastle =
                             if includeCastling && player == position.playerToMove && canKingsideCastle position then
-                                [ ( 0, 2 ) ]
+                                [Ply.KingsideCastle player]
 
                             else
                                 []
 
                         possibilities =
                             [ ( -1, -1 ), ( -1, 0 ), ( -1, 1 ), ( 0, -1 ), ( 0, 1 ), ( 1, -1 ), ( 1, 0 ), ( 1, 1 ) ]
-                                ++ kingSideCastle
-                                ++ queenSideCastle
                                 |> List.map (Square.offset square)
                                 |> List.map (omitIfOccupiedByPlayer position player)
                     in
                     possibilities
                         |> List.filterMap identity
+                        |> List.map (convertEndSquareToStandardMove position player piece square)
+                        |> (++) kingSideCastle
+                        |> (++) queenSideCastle
                         |> EverySet.fromList
-                        |> EverySet.map (convertEndSquareToStandardMove position player piece square)
 
                 Piece.Bishop ->
                     [ ( -1, -1 ), ( -1, 1 ), ( 1, -1 ), ( 1, 1 ) ]
