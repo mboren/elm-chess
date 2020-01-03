@@ -149,6 +149,20 @@ toString move =
                         _ ->
                             Piece.pieceKindToString data.piece.kind |> String.toUpper
 
+                context =
+                    {- With rooks and knights there can be situations where just giving the piece name and end
+                    square is ambiguous. For proper notation, we would only provide the minimum amount of information
+                    necessary to resolve ambiguity (in order of preference: Nothing, only rank, only file, both rank and
+                    file), but for now i'm just going to add both every time.
+                    -}
+                    case data.piece.kind of
+                        Piece.Rook ->
+                            Square.toString data.start
+                        Piece.Knight ->
+                            Square.toString data.start
+                        _ -> ""
+
+
                 takesString =
                     case data.takes of
                         Nothing ->
@@ -164,7 +178,7 @@ toString move =
                     Maybe.map (.kind >> Piece.pieceKindToString >> String.toUpper >> (\x -> "=" ++ x)) data.promotion
                         |> Maybe.withDefault ""
             in
-            pieceString ++ takesString ++ destinationString ++ promotionString
+            pieceString ++ context ++ takesString ++ destinationString ++ promotionString
 
         EnPassant data ->
             -- TODO this isn't proper notation
