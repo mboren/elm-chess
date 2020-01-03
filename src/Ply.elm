@@ -153,7 +153,7 @@ toString move =
                     Square.toString data.end
 
                 promotionString =
-                    Maybe.map Piece.toString data.promotion |> Maybe.withDefault ""
+                    Maybe.map (.kind >> Piece.pieceKindToString >> String.toUpper >> \x->"="++x) data.promotion |> Maybe.withDefault ""
             in
             pieceString ++ takesString ++ destinationString ++ promotionString
 
