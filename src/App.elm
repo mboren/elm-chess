@@ -95,12 +95,19 @@ view model =
         []
         (Element.column
             []
-            [ drawBoard model
+            [ drawTakenPieces (History.getTakenPieces BlackPlayer model.position.history)
+            , drawBoard model
+            , drawTakenPieces (History.getTakenPieces WhitePlayer model.position.history)
             , drawHistory model.position
             , drawStatus model
             , drawDebugInfo model
             ]
         )
+
+
+drawTakenPieces : List Piece -> Element Msg
+drawTakenPieces pieces =
+    pieces |> List.map Piece.toString |> String.join "" |> Element.text
 
 
 drawStatus : Model -> Element Msg

@@ -50,6 +50,14 @@ getPlayer ply =
         KingsideCastle player ->
             player
 
+getTakenPiece : Ply -> Maybe Piece
+getTakenPiece ply =
+    case ply of
+        StandardMove data -> data.takes
+        EnPassant data -> Just (Piece Piece.Pawn (Player.otherPlayer data.player))
+        KingsideCastle _ -> Nothing
+        QueensideCastle _ -> Nothing
+
 
 getPiece : Ply -> Piece
 getPiece ply =

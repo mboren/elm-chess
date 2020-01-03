@@ -25,6 +25,11 @@ add ply history =
         Just p ->
             { history | pastMoves = ( p, ply ) :: history.pastMoves, latestPly = Nothing }
 
+getTakenPieces : Player -> History -> List Piece
+getTakenPieces player history =
+    getPlayerMoves (Player.otherPlayer player) history
+    |> List.filterMap (Ply.getTakenPiece)
+
 
 getLastPly : History -> Maybe Ply
 getLastPly history =
