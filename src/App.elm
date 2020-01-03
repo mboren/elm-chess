@@ -192,7 +192,6 @@ drawBoard model =
         foo =
             Array2D.indexedMap (squareEl (Element.px 50) currentPlayersSquares possibleMoves selectedSquare) model.position.board
                 |> Position.getRows
-                |> flipBoard
 
         rows =
             List.map (Element.row []) foo
@@ -200,12 +199,6 @@ drawBoard model =
     Element.column
         [ Element.width Element.fill ]
         rows
-
-
-flipBoard : List (List (a)) -> List (List (a))
-flipBoard rows =
-    List.map List.reverse rows
-        |> List.reverse
 
 
 squareColor : Maybe Square -> EverySet Square -> Square -> Element.Color

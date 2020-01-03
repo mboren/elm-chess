@@ -613,6 +613,7 @@ getRows board =
         |> List.filter maybeToBool
         |> List.map (Maybe.withDefault (Array.fromList []))
         |> List.map Array.toList
+        |> List.reverse
 
 
 initial =
