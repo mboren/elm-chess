@@ -141,18 +141,8 @@ drawDebugInfo model =
                 "F"
     in
     {- this function is used for misc stuff i want to see while developing -}
-    [ ( "hasKingMoved (white)", History.hasKingMoved WhitePlayer model.position.history )
-    , ( "hasKingMoved (black)", History.hasKingMoved BlackPlayer model.position.history )
-    , ( "hasQueensideRookMoved (white)", History.hasQueensideRookMoved WhitePlayer model.position.history )
-    , ( "hasQueensideRookMoved (black)", History.hasQueensideRookMoved BlackPlayer model.position.history )
-
-    --, ( "canKingsideCastle", Position.canKingsideCastle model.position )
-    --, ( "canQueensideCastle", Position.canQueensideCastle model.position )
-    , ( "inCheck (white)", Position.isPlayerInCheck WhitePlayer model.position )
-
-    --, ( "inCheck (black)", Position.isPlayerInCheck BlackPlayer model.position )
-    , ( "Checkmate", Position.isCurrentPlayerInCheckMate model.position )
-    ]
+    -- (label string, bool expression)
+    [ ]
         |> List.map (\( text, flag ) -> text ++ ": " ++ boolToString flag)
         |> List.map Element.text
         |> Element.column []
