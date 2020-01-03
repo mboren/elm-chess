@@ -85,7 +85,41 @@ pieceKindToString pk =
 toString p =
     case p.color of
         WhitePlayer ->
-            String.toUpper (pieceKindToString p.kind)
+            case p.kind of
+                Pawn ->
+                    "♙"
+
+                Rook ->
+                    "♖"
+
+                Knight ->
+                    "♘"
+
+                Bishop ->
+                    "♗"
+
+                King ->
+                    "♔"
+
+                Queen ->
+                    "♕"
 
         BlackPlayer ->
-            String.toLower (pieceKindToString p.kind)
+            case p.kind of
+                Pawn ->
+                    "♟"
+
+                Rook ->
+                    "♜"
+
+                Knight ->
+                    "♞"
+
+                Bishop ->
+                    "♝"
+
+                King ->
+                    "♚"
+
+                Queen ->
+                    "♛"
