@@ -121,6 +121,7 @@ drawStatus model =
     --, ( "canQueensideCastle", Position.canQueensideCastle model.position )
     , ( "inCheck (white)", Position.isPlayerInCheck WhitePlayer model.position )
     --, ( "inCheck (black)", Position.isPlayerInCheck BlackPlayer model.position )
+    , ("Checkmate", Position.isCurrentPlayerInCheckMate model.position)
     ]
         |> List.map (\( text, flag ) -> text ++ ": " ++ boolToString flag)
         |> List.map Element.text
