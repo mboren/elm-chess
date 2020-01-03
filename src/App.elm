@@ -154,7 +154,12 @@ drawBoard : Model -> Element Msg
 drawBoard model =
     let
         currentPlayersSquares =
-            Position.getSquaresOccupiedByCurrentPlayer model.position
+            case model.status of
+                Checkmate ->
+                    EverySet.empty
+
+                _ ->
+                    Position.getSquaresOccupiedByCurrentPlayer model.position
 
         selectedSquare =
             case model.status of
