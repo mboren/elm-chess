@@ -454,14 +454,14 @@ getPossibleMoves includeCastling player position square =
                     let
                         queenSideCastle =
                             if includeCastling && player == position.playerToMove && canQueensideCastle position then
-                                [Ply.QueensideCastle player]
+                                [ Ply.QueensideCastle player ]
 
                             else
                                 []
 
                         kingSideCastle =
                             if includeCastling && player == position.playerToMove && canKingsideCastle position then
-                                [Ply.KingsideCastle player]
+                                [ Ply.KingsideCastle player ]
 
                             else
                                 []
