@@ -369,14 +369,9 @@ isPlayerInCheck player position =
 
 isCurrentPlayerInCheckMate : Position -> Bool
 isCurrentPlayerInCheckMate position =
-    let
-        inCheck =
-            isPlayerInCheck position.playerToMove position
-
-        possibleMoves =
-            generateAllMoves position.playerToMove position
-    in
-    inCheck && possibleMoves == EverySet.empty
+    isPlayerInCheck position.playerToMove position
+        && EverySet.empty
+        == generateAllMovesForCurrentPlayerWithoutCheck position
 
 
 generateAllPossibleNextPositions : Position -> List Position
@@ -395,6 +390,16 @@ generateAllMoves player position =
     getSquaresOccupiedByPlayer player position
         |> EverySet.toList
         |> List.map (getPossibleMoves False player position)
+        |> List.map EverySet.toList
+        |> List.concat
+        |> EverySet.fromList
+
+
+generateAllMovesForCurrentPlayerWithoutCheck : Position -> EverySet Ply
+generateAllMovesForCurrentPlayerWithoutCheck position =
+    getSquaresOccupiedByPlayer position.playerToMove position
+        |> EverySet.toList
+        |> List.map (getPossibleMovesForCurrentPlayerWithoutCheck position)
         |> List.map EverySet.toList
         |> List.concat
         |> EverySet.fromList
