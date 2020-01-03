@@ -17,6 +17,15 @@ otherPlayer player =
             WhitePlayer
 
 
+toString player =
+    case player of
+        WhitePlayer ->
+            "White"
+
+        BlackPlayer ->
+            "Black"
+
+
 lastRank player =
     case player of
         WhitePlayer ->

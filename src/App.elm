@@ -32,6 +32,7 @@ main =
 type GameStatus
     = SelectingPiece
     | SelectingMove Square (EverySet Ply)
+    | Checkmate
 
 
 type alias Model =
@@ -74,7 +75,11 @@ update msg model =
                             model
 
                         Just pos ->
-                            { model | position = pos, status = SelectingPiece }
+                            if Position.isCurrentPlayerInCheckMate pos then
+                                { model | position = pos, status = Checkmate }
+
+                            else
+                                { model | position = pos, status = SelectingPiece }
 
                 _ ->
                     model
@@ -93,8 +98,23 @@ view model =
             [ drawBoard model
             , drawHistory model.position
             , drawStatus model
+            , drawDebugInfo model
             ]
         )
+
+
+drawStatus : Model -> Element Msg
+drawStatus model =
+    let
+        text =
+            case model.status of
+                Checkmate ->
+                    (Player.toString <| Player.otherPlayer <| model.position.playerToMove) ++ " wins!"
+
+                _ ->
+                    (Player.toString <| model.position.playerToMove) ++ " to move"
+    in
+    Element.text text
 
 
 drawHistory : Position -> Element Msg
@@ -102,8 +122,8 @@ drawHistory position =
     History.toStrings position.history |> String.join " " |> Element.text
 
 
-drawStatus : Model -> Element Msg
-drawStatus model =
+drawDebugInfo : Model -> Element Msg
+drawDebugInfo model =
     let
         boolToString b =
             if b then
@@ -137,6 +157,9 @@ drawBoard model =
         selectedSquare =
             case model.status of
                 SelectingPiece ->
+                    Nothing
+
+                Checkmate ->
                     Nothing
 
                 SelectingMove square _ ->
