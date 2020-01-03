@@ -265,17 +265,31 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
 
             else
                 []
+
+        glow =
+            case maybePiece of
+                Nothing ->
+                    []
+
+                Just p ->
+                    case p.color of
+                        WhitePlayer ->
+                            [ Font.glow (Element.rgb 0 0 0) 1.0 ]
+
+                        BlackPlayer ->
+                            []
     in
     Element.el
         ([ Background.color (squareColor selectedSquare (EverySet.map toSquareForMoveSelection possibleMoves) (Square rank file))
          , Font.color mainFontColor
+         , Font.size 50
          , Font.center
-         , Font.glow (Element.rgb 0 0 0) 1.0
          , Element.padding 0
          , Element.width size
          , Element.height size
          ]
             ++ squareClickEvent
+            ++ glow
         )
         (case maybePiece of
             Nothing ->
