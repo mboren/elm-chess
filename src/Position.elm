@@ -217,35 +217,36 @@ getPossiblePawnMoves player square position =
                         else
                             Just (Ply.StandardMove { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = Nothing })
 
-        -- TODO temporarily removing EnPassant until i'm ready to support it with Ply type
-        --enpassant =
-        --    let
-        --        lp =
-        --            History.getLastPly position.history
-        --    in
-        --    case lp of
-        --        Nothing ->
-        --            Nothing
-        --
-        --        Just (Ply.StandardMove data) ->
-        --            let
-        --                prevDistance =
-        --                    abs (data.end.rank - data.start.rank)
-        --
-        --                fileDelta =
-        --                    abs (data.start.file - square.file)
-        --
-        --                fifthRank =
-        --                    Player.lastRank player - (3 * direction)
-        --            in
-        --            if data.piece.kind == Piece.Pawn && prevDistance == 2 && fileDelta == 1 && square.file == fifthRank then
-        --                Just (Square (square.rank + direction) data.end.file)
-        --
-        --            else
-        --                Nothing
-        --
-        --        _ ->
-        --            Nothing
+        enpassant : Maybe Ply
+        enpassant =
+            let
+                lp =
+                    History.getLastPly position.history
+            in
+            case lp of
+                Nothing ->
+                    Nothing
+
+                Just (Ply.StandardMove data) ->
+                    let
+                        prevDistance =
+                            abs (data.end.rank - data.start.rank)
+
+                        fileDelta =
+                            abs (data.start.file - square.file)
+
+                        fifthRank =
+                            Player.lastRank player - (3 * direction)
+                    in
+                    if data.piece.kind == Piece.Pawn && prevDistance == 2 && fileDelta == 1 && square.rank == fifthRank then
+                        Just (Ply.EnPassant { player = player, start = square, end = Square (square.rank + direction) data.end.file, takenPawn = data.end })
+
+                    else
+                        Nothing
+
+                _ ->
+                    Nothing
+
         captures =
             [ ( direction, -1 ), ( direction, 1 ) ]
                 |> List.map (Square.offset square)
@@ -268,7 +269,7 @@ getPossiblePawnMoves player square position =
                     )
                 |> List.map Just
     in
-    [ {- enpassant, -} firstMove, extraMove ] ++ captures |> List.filterMap identity |> EverySet.fromList
+    [ enpassant, firstMove, extraMove ] ++ captures |> List.filterMap identity |> EverySet.fromList
 
 
 omitAfterOccupied : Position -> Player -> List Square -> List Square
@@ -364,6 +365,18 @@ isPlayerInCheck player position =
                         |> EverySet.fromList
             in
             EverySet.member sq otherPlayerPossibleMoves
+
+
+isCurrentPlayerInCheckMate : Position -> Bool
+isCurrentPlayerInCheckMate position =
+    let
+        inCheck =
+            isPlayerInCheck position.playerToMove position
+
+        possibleMoves =
+            generateAllMoves position.playerToMove position
+    in
+    inCheck && possibleMoves == EverySet.empty
 
 
 generateAllPossibleNextPositions : Position -> List Position
@@ -539,6 +552,12 @@ makeMove position ply =
                     position.board
                         |> Array2D.set data.end.rank data.end.file newPiece
                         |> Array2D.set data.start.rank data.start.file Nothing
+
+                Ply.EnPassant data ->
+                    position.board
+                        |> Array2D.set data.start.rank data.start.file Nothing
+                        |> Array2D.set data.end.rank data.end.file (Just (Piece Piece.Pawn data.player))
+                        |> Array2D.set data.takenPawn.rank data.takenPawn.file Nothing
     in
     Just
         { position

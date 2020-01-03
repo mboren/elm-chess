@@ -28,6 +28,7 @@ type Ply
     = StandardMove StandardMoveData
     | QueensideCastle Player
     | KingsideCastle Player
+    | EnPassant EnPassantData
 
 
 
@@ -38,6 +39,9 @@ getPlayer : Ply -> Player
 getPlayer ply =
     case ply of
         StandardMove data ->
+            data.player
+
+        EnPassant data ->
             data.player
 
         QueensideCastle player ->
@@ -53,6 +57,9 @@ getPiece ply =
         StandardMove data ->
             data.piece
 
+        EnPassant data ->
+            Piece Piece.Pawn data.player
+
         QueensideCastle player ->
             Piece Piece.King player
 
@@ -64,6 +71,9 @@ getStart : Ply -> Square
 getStart ply =
     case ply of
         StandardMove data ->
+            data.start
+
+        EnPassant data ->
             data.start
 
         QueensideCastle player ->
@@ -79,6 +89,9 @@ getEnd ply =
         StandardMove data ->
             Just data.end
 
+        EnPassant data ->
+            Just data.end
+
         QueensideCastle player ->
             Nothing
 
@@ -91,6 +104,9 @@ getPieceKind ply =
     case ply of
         StandardMove data ->
             data.piece.kind
+
+        EnPassant _ ->
+            Piece.Pawn
 
         QueensideCastle _ ->
             Piece.King
@@ -133,6 +149,11 @@ toString move =
             in
             pieceString ++ takesString ++ destinationString ++ promotionString
 
+        EnPassant data ->
+            -- TODO this isn't proper notation
+            [(Square.fileToString data.start.file), "x" , Square.toString data.takenPawn, "e.p."]
+            |> String.join ""
+
         QueensideCastle _ ->
             "0-0-0"
 
@@ -146,6 +167,9 @@ toThreat ply =
         StandardMove data ->
             Just data.end
 
+        EnPassant data ->
+            Just data.takenPawn
+
         QueensideCastle _ ->
             Nothing
 
@@ -157,6 +181,9 @@ toSquareForMoveSelection : Ply -> Square
 toSquareForMoveSelection ply =
     case ply of
         StandardMove data ->
+            data.end
+
+        EnPassant data ->
             data.end
 
         QueensideCastle player ->
