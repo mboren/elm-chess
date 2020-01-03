@@ -4,6 +4,7 @@ import Array2D exposing (Array2D)
 import Browser
 import Element exposing (Element)
 import Element.Background as Background
+import Element.Border
 import Element.Events
 import Element.Font as Font
 import EverySet exposing (EverySet)
@@ -201,39 +202,27 @@ drawBoard model =
         rows
 
 
-squareColor : Maybe Square -> EverySet Square -> Square -> Element.Color
-squareColor selectedSquare possibleMoves currentSquare =
+squareColor : Maybe Square -> Square -> Element.Color
+squareColor selectedSquare currentSquare =
     let
-        isPossibleMove =
-            EverySet.member currentSquare possibleMoves
-
-        greenOffset =
+        unselectedColors =
+                    ( Element.rgb255 237 238 210, Element.rgb255 0 150 53 )
+        selectedColors =
+                        ( Element.rgb255 255 241 0, Element.rgb255 255 241 0 )
+        ( whiteSquareColor, blackSquareColor ) =
             case selectedSquare of
                 Nothing ->
-                    0
+                    unselectedColors
 
                 Just sq ->
-                    if sq.rank == currentSquare.rank && sq.file == currentSquare.file then
-                        -50
-
-                    else
-                        0
-
-        whiteSquareColor =
-            Element.rgb255 255 (241 + greenOffset) 173
-
-        blackSquareColor =
-            Element.rgb255 0 (150 + greenOffset) 53
+                   if sq.rank == currentSquare.rank && sq.file == currentSquare.file then
+                        selectedColors
+                   else
+                        unselectedColors
     in
-    if isPossibleMove then
-        Element.rgb255 255 0 0
-
-    else
     -- if the evenness of the rank and file are the same, then it is black, otherwise it is white
     -- eg file A (=1), rank 8 is white, file B (=2), rank 8 is black
-    if
-        modBy 2 (currentSquare.rank + 1) == modBy 2 (currentSquare.file + 1)
-    then
+    if modBy 2 (currentSquare.rank + 1) == modBy 2 (currentSquare.file + 1) then
         blackSquareColor
 
     else
@@ -274,6 +263,13 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
             else
                 []
 
+        overlay =
+            if EverySet.member (Square rank file) moveSquares then
+                Element.el [ Element.Border.rounded 50, Background.color (Element.rgb255 255 0 0), Element.width Element.fill, Element.height Element.fill, Element.alpha 0.5 ] Element.none
+
+            else
+                Element.none
+
         glow =
             case maybePiece of
                 Nothing ->
@@ -288,13 +284,14 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
                             []
     in
     Element.el
-        ([ Background.color (squareColor selectedSquare (EverySet.map toSquareForMoveSelection possibleMoves) (Square rank file))
+        ([ Background.color (squareColor selectedSquare (Square rank file))
          , Font.color mainFontColor
          , Font.size 50
          , Font.center
          , Element.padding 0
          , Element.width size
          , Element.height size
+         , Element.inFront overlay
          ]
             ++ squareClickEvent
             ++ glow
