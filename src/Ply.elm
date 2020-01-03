@@ -50,13 +50,21 @@ getPlayer ply =
         KingsideCastle player ->
             player
 
+
 getTakenPiece : Ply -> Maybe Piece
 getTakenPiece ply =
     case ply of
-        StandardMove data -> data.takes
-        EnPassant data -> Just (Piece Piece.Pawn (Player.otherPlayer data.player))
-        KingsideCastle _ -> Nothing
-        QueensideCastle _ -> Nothing
+        StandardMove data ->
+            data.takes
+
+        EnPassant data ->
+            Just (Piece Piece.Pawn (Player.otherPlayer data.player))
+
+        KingsideCastle _ ->
+            Nothing
+
+        QueensideCastle _ ->
+            Nothing
 
 
 getPiece : Ply -> Piece
@@ -153,14 +161,15 @@ toString move =
                     Square.toString data.end
 
                 promotionString =
-                    Maybe.map (.kind >> Piece.pieceKindToString >> String.toUpper >> \x->"="++x) data.promotion |> Maybe.withDefault ""
+                    Maybe.map (.kind >> Piece.pieceKindToString >> String.toUpper >> (\x -> "=" ++ x)) data.promotion
+                        |> Maybe.withDefault ""
             in
             pieceString ++ takesString ++ destinationString ++ promotionString
 
         EnPassant data ->
             -- TODO this isn't proper notation
-            [(Square.fileToString data.start.file), "x" , Square.toString data.takenPawn, "e.p."]
-            |> String.join ""
+            [ Square.fileToString data.start.file, "x", Square.toString data.takenPawn, "e.p." ]
+                |> String.join ""
 
         QueensideCastle _ ->
             "0-0-0"
