@@ -152,7 +152,7 @@ drawDebugInfo model =
     in
     {- this function is used for misc stuff i want to see while developing -}
     -- (label string, bool expression)
-    [ ]
+    []
         |> List.map (\( text, flag ) -> text ++ ": " ++ boolToString flag)
         |> List.map Element.text
         |> Element.column []
@@ -206,18 +206,21 @@ squareColor : Maybe Square -> Square -> Element.Color
 squareColor selectedSquare currentSquare =
     let
         unselectedColors =
-                    ( Element.rgb255 237 238 210, Element.rgb255 0 150 53 )
+            ( Element.rgb255 237 238 210, Element.rgb255 0 150 53 )
+
         selectedColors =
-                        ( Element.rgb255 255 241 0, Element.rgb255 255 241 0 )
+            ( Element.rgb255 255 241 0, Element.rgb255 255 241 0 )
+
         ( whiteSquareColor, blackSquareColor ) =
             case selectedSquare of
                 Nothing ->
                     unselectedColors
 
                 Just sq ->
-                   if sq.rank == currentSquare.rank && sq.file == currentSquare.file then
+                    if sq.rank == currentSquare.rank && sq.file == currentSquare.file then
                         selectedColors
-                   else
+
+                    else
                         unselectedColors
     in
     -- if the evenness of the rank and file are the same, then it is black, otherwise it is white
