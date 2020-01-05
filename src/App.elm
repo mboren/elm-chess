@@ -7,6 +7,7 @@ import Element.Background as Background
 import Element.Border
 import Element.Events
 import Element.Font as Font
+import Element.Input
 import EverySet exposing (EverySet)
 import History
 import Html exposing (Html)
@@ -56,6 +57,7 @@ init =
 type Msg
     = SelectPiece Square
     | MoveTo Ply
+    | DebugLogPosition
 
 
 update : Msg -> Model -> Model
@@ -85,6 +87,13 @@ update msg model =
                 _ ->
                     model
 
+        DebugLogPosition ->
+            let
+                _ =
+                    Debug.log "" model.position
+            in
+            model
+
 
 
 -- VIEW
@@ -101,6 +110,7 @@ view model =
             , drawTakenPieces (History.getTakenPieces WhitePlayer model.position.history)
             , drawHistory model.position
             , drawStatus model
+            , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just DebugLogPosition, label = Element.text "Log position" }
             , drawDebugInfo model
             ]
         )
