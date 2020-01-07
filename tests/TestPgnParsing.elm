@@ -45,6 +45,11 @@ suite =
                         \_ ->
                             Expect.equal (Parser.run Pgn.pawnAdvance "e3") (Ok (Pgn.PawnAdvance (Square 2 4) Nothing))
                     ]
+                , describe "pawnCapture"
+                    [ test "exd5" <|
+                        \_ ->
+                            Expect.equal (Parser.run Pgn.pawnCapture "exd5") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 4 3, promotion = Nothing }))
+                    ]
                 , describe "findPawnThatCanMoveToPosition"
                     [ test "a4" <|
                         \_ ->

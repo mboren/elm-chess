@@ -11,7 +11,7 @@ type PgnPly
     = KingsideCastle
     | QueensideCastle
     | PawnAdvance Square (Maybe Piece)
-    | PawnCapture { startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square, promotion : Maybe Piece.PieceKind }
+    | PawnCapture { startFile : Square.File, end : Square, promotion : Maybe Piece.PieceKind }
     | Capture { pieceKind : Piece.PieceKind, startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square }
     | Standard { pieceKind : Piece.PieceKind, startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square }
 
@@ -19,6 +19,14 @@ type PgnPly
 pawnAdvance : Parser PgnPly
 pawnAdvance =
     square |> andThen (\s -> succeed (PawnAdvance s Nothing))
+
+
+pawnCapture : Parser PgnPly
+pawnCapture =
+    succeed (\f e -> PawnCapture { startFile = f, end = e, promotion = Nothing })
+        |= file
+        |. symbol "x"
+        |= square
 
 
 pieceKind : Parser Piece.PieceKind
