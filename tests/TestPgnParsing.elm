@@ -38,12 +38,12 @@ suite =
     describe "PGN parsing"
         [ only <|
             describe "building blocks"
-                [ describe "pawnTextToPly"
+                [ describe "pawnAdvance"
                     [ test "a4" <|
-                        \_ -> Expect.equal (Pgn.pawnTextToPly Position.initial 0 3) (Just (Ply.StandardMove { start = Square 1 0, end = Square 3 0, piece = Piece Piece.Pawn Player.WhitePlayer, player = Player.WhitePlayer, takes = Nothing, promotion = Nothing }))
-                    , test "pawnPly" <|
+                        \_ -> Expect.equal (Parser.run Pgn.pawnAdvance "a4") (Ok (Pgn.PawnAdvance (Square 3 0) Nothing))
+                    , test "e3" <|
                         \_ ->
-                            Expect.equal (Parser.run (Pgn.pawnPly Position.initial) "e4") (Ok (Just (basicPly (Square 1 4) (Square 3 4) Pawn Player.WhitePlayer)))
+                            Expect.equal (Parser.run Pgn.pawnAdvance "e3") (Ok (Pgn.PawnAdvance (Square 2 4) Nothing))
                     ]
                 , describe "findPawnThatCanMoveToPosition"
                     [ test "a4" <|

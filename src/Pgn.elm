@@ -7,29 +7,18 @@ import Position exposing (Position)
 import Square exposing (Square)
 
 
-pawnTextToPly : Position -> Square.File -> Square.Rank -> Maybe Ply
-pawnTextToPly position f r =
-    let
-        pawnSquare =
-            Position.findPawnThatCanMoveToSquare (Square r f) position
-    in
-    pawnSquare
-        |> Maybe.map (\sq -> Ply.StandardMove { start = sq, end = Square r f, player = position.playerToMove, piece = Piece Piece.Pawn position.playerToMove, takes = Nothing, promotion = Nothing })
-        |> Maybe.andThen
-            (\ply ->
-                if Position.isPlyValid ply position then
-                    Just ply
-
-                else
-                    Nothing
-            )
+type PgnPly
+    = KingsideCastle
+    | QueensideCastle
+    | PawnAdvance Square (Maybe Piece)
+    | PawnCapture { startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square, promotion : Maybe Piece.PieceKind }
+    | Capture { pieceKind : Piece.PieceKind, startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square }
+    | Standard { pieceKind : Piece.PieceKind, startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square }
 
 
-pawnPly : Position -> Parser (Maybe Ply)
-pawnPly position =
-    succeed (pawnTextToPly position)
-        |= file
-        |= rank
+pawnAdvance : Parser PgnPly
+pawnAdvance =
+    square |> andThen (\s -> succeed (PawnAdvance s Nothing))
 
 
 pieceKind : Parser Piece.PieceKind
