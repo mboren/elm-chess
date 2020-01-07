@@ -171,12 +171,7 @@ getPossiblePawnMoves : Player -> Square -> Position -> EverySet Ply
 getPossiblePawnMoves player square position =
     let
         direction =
-            case player of
-                WhitePlayer ->
-                    1
-
-                BlackPlayer ->
-                    -1
+            Player.direction player
 
         firstMove =
             let

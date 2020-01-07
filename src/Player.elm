@@ -8,6 +8,16 @@ type Player
     | BlackPlayer
 
 
+direction : Player -> Int
+direction player =
+    case player of
+        WhitePlayer ->
+            1
+
+        BlackPlayer ->
+            -1
+
+
 otherPlayer player =
     case player of
         WhitePlayer ->
