@@ -40,6 +40,70 @@ findPieces piece position =
     List.filter (hasPiece position) occupiedSquares
 
 
+isPlyValid : Ply -> Position -> Bool
+isPlyValid ply position =
+    let
+        startSquare =
+            Ply.getStart ply
+
+        possiblePlies =
+            getPossibleMovesForCurrentPlayerWithoutCheck position startSquare
+    in
+    EverySet.member ply possiblePlies
+
+
+doesCurrentPlayerHavePawnOnSquare : Square -> Position -> Bool
+doesCurrentPlayerHavePawnOnSquare square position =
+    case get position square of
+        Nothing ->
+            False
+
+        Just p ->
+            p.kind == Piece.Pawn && p.color == position.playerToMove
+
+
+findPawnThatCanMoveToSquare : Square -> Position -> Maybe Square
+findPawnThatCanMoveToSquare square position =
+    let
+        player =
+            position.playerToMove
+
+        direction =
+            Player.direction player
+
+        oneBack =
+            Square.offset square ( -1 * direction, 0 )
+
+        twoBack =
+            if square.rank - (2 * direction) == direction + Player.firstRank player then
+                Square.offset square ( -2 * direction, 0 )
+
+            else
+                Nothing
+
+        -- note that i'm not checking if the squares are occupied bc i think that'll be taken care of in a later stage
+    in
+    case oneBack of
+        Nothing ->
+            Nothing
+
+        Just oneBackSquare ->
+            if doesCurrentPlayerHavePawnOnSquare oneBackSquare position then
+                Just oneBackSquare
+
+            else
+                case twoBack of
+                    Nothing ->
+                        Nothing
+
+                    Just twoBackSquare ->
+                        if doesCurrentPlayerHavePawnOnSquare twoBackSquare position then
+                            Just twoBackSquare
+
+                        else
+                            Nothing
+
+
 canKingsideCastle : Position -> Bool
 canKingsideCastle position =
     let
