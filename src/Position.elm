@@ -634,9 +634,11 @@ initial =
             |> Array2D.fromList
     }
 
+
 fromPgn : String -> Result String Position
 fromPgn text =
     if String.isEmpty text then
         Ok initial
+
     else
         Err "Not handled yet"
