@@ -19,10 +19,8 @@ type PgnPly
 ply : Parser PgnPly
 ply =
     oneOf
-        [ pawnAdvanceWithPromotion
+        [ castle
         , pawnAdvance
-        , pawnCaptureWithPromotion
-        , pawnCapture
         ]
 
 

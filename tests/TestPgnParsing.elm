@@ -40,6 +40,8 @@ suite =
             [ describe "ply" <|
                 [ test "pawn advance a4" <|
                     \_ -> Expect.equal (Ok (Pgn.PawnAdvance (Square 3 0) Nothing)) (Parser.run Pgn.ply "a4")
+                , test "kingside castle" <|
+                    \_ -> Expect.equal (Parser.run Pgn.ply "O-O") (Ok Pgn.KingsideCastle)
                 ]
             ]
         , describe "building blocks"
