@@ -36,13 +36,12 @@ kingPawnOpening =
 suite : Test
 suite =
     describe "PGN parsing"
-        [ only <|
-            describe "putting it together"
-                [ describe "ply" <|
-                    [ test "pawn advance a4" <|
-                        \_ -> Expect.equal (Ok (Pgn.PawnAdvance (Square 3 0) Nothing)) (Parser.run Pgn.ply "a4")
-                    ]
+        [ describe "putting it together"
+            [ describe "ply" <|
+                [ test "pawn advance a4" <|
+                    \_ -> Expect.equal (Ok (Pgn.PawnAdvance (Square 3 0) Nothing)) (Parser.run Pgn.ply "a4")
                 ]
+            ]
         , describe "building blocks"
             [ describe "pawnAdvance"
                 [ test "a4" <|
@@ -50,6 +49,16 @@ suite =
                 , test "e3" <|
                     \_ ->
                         Expect.equal (Parser.run Pgn.pawnAdvance "e3") (Ok (Pgn.PawnAdvance (Square 2 4) Nothing))
+                ]
+            , describe "castle"
+                [ test "kingside" <|
+                    \_ -> Expect.equal (Parser.run Pgn.castle "O-O") (Ok Pgn.KingsideCastle)
+                , test "queenside" <|
+                    \_ -> Expect.equal (Parser.run Pgn.castle "O-O-O") (Ok Pgn.QueensideCastle)
+                , test "garbage" <|
+                    \_ -> Expect.err (Parser.run Pgn.castle "O-O-")
+                , test "garbage 2" <|
+                    \_ -> Expect.err (Parser.run Pgn.castle "O-")
                 ]
             , describe "pawnAdvanceWithPromotion"
                 [ test "Legal promotion e8=Q" <|

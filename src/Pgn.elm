@@ -26,6 +26,25 @@ ply =
         ]
 
 
+stringToCastle s =
+    case s of
+        "O-O" ->
+            succeed KingsideCastle
+
+        "O-O-O" ->
+            succeed QueensideCastle
+
+        _ ->
+            problem ("I thought I was looking at castling, but found something weird: " ++ s)
+
+
+castle : Parser PgnPly
+castle =
+    chompWhile (\c -> c == 'O' || c == '-')
+        |> getChompedString
+        |> andThen stringToCastle
+
+
 pawnAdvance : Parser PgnPly
 pawnAdvance =
     square |> andThen (\s -> succeed (PawnAdvance s Nothing))
