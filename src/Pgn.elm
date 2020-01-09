@@ -10,15 +10,39 @@ import Square exposing (Square)
 type PgnPly
     = KingsideCastle
     | QueensideCastle
-    | PawnAdvance Square (Maybe Piece)
+    | PawnAdvance Square (Maybe Piece.PieceKind)
     | PawnCapture { startFile : Square.File, end : Square, promotion : Maybe Piece.PieceKind }
     | Capture { pieceKind : Piece.PieceKind, startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square }
     | Standard { pieceKind : Piece.PieceKind, startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square }
 
 
+ply : Parser PgnPly
+ply =
+    oneOf
+        [ pawnAdvanceWithPromotion
+        , pawnAdvance
+        , pawnCaptureWithPromotion
+        , pawnCapture
+        ]
+
+
 pawnAdvance : Parser PgnPly
 pawnAdvance =
     square |> andThen (\s -> succeed (PawnAdvance s Nothing))
+
+
+pawnAdvanceWithPromotion : Parser PgnPly
+pawnAdvanceWithPromotion =
+    succeed (\sq prom -> PawnAdvance sq (Just prom))
+        |= square
+        |= promotion
+
+
+promotion : Parser Piece.PieceKind
+promotion =
+    succeed identity
+        |. symbol "="
+        |= pieceKind
 
 
 pawnCapture : Parser PgnPly
@@ -27,6 +51,15 @@ pawnCapture =
         |= file
         |. symbol "x"
         |= square
+
+
+pawnCaptureWithPromotion : Parser PgnPly
+pawnCaptureWithPromotion =
+    succeed (\f e p -> PawnCapture { startFile = f, end = e, promotion = Just p })
+        |= file
+        |. symbol "x"
+        |= square
+        |= promotion
 
 
 pieceKind : Parser Piece.PieceKind

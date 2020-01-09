@@ -37,102 +37,132 @@ suite : Test
 suite =
     describe "PGN parsing"
         [ only <|
-            describe "building blocks"
-                [ describe "pawnAdvance"
-                    [ test "a4" <|
-                        \_ -> Expect.equal (Parser.run Pgn.pawnAdvance "a4") (Ok (Pgn.PawnAdvance (Square 3 0) Nothing))
-                    , test "e3" <|
-                        \_ ->
-                            Expect.equal (Parser.run Pgn.pawnAdvance "e3") (Ok (Pgn.PawnAdvance (Square 2 4) Nothing))
-                    ]
-                , describe "pawnCapture"
-                    [ test "exd5" <|
-                        \_ ->
-                            Expect.equal (Parser.run Pgn.pawnCapture "exd5") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 4 3, promotion = Nothing }))
-                    ]
-                , describe "findPawnThatCanMoveToPosition"
-                    [ test "a4" <|
-                        \_ ->
-                            Expect.equal (Position.findPawnThatCanMoveToSquare (Square 3 0) Position.initial) (Just (Square 1 0))
-                    , test "a3" <|
-                        \_ ->
-                            Expect.equal (Position.findPawnThatCanMoveToSquare (Square 2 0) Position.initial) (Just (Square 1 0))
-                    , test "a6" <|
-                        \_ ->
-                            Expect.equal (Position.findPawnThatCanMoveToSquare (Square 5 0) kingPawnOpening) (Just (Square 6 0))
-                    , test "a5" <|
-                        \_ ->
-                            Expect.equal (Position.findPawnThatCanMoveToSquare (Square 4 0) kingPawnOpening) (Just (Square 6 0))
-                    , test "square too far from pawn" <|
-                        \_ ->
-                            Expect.equal (Position.findPawnThatCanMoveToSquare (Square 5 0) Position.initial) Nothing
-                    , test "file without pawn" <|
-                        \_ ->
-                            Expect.equal (Position.findPawnThatCanMoveToSquare (Square 3 0) positionWithNoWhiteAPawn) Nothing
-                    ]
-                , describe "rank"
-                    [ test "valid rank" <|
-                        \_ -> Expect.equal (Parser.run Pgn.rank "1") (Ok 0)
-                    , test "invalid rank 9" <|
-                        \_ -> Expect.err (Parser.run Pgn.rank "9")
-                    , test "invalid rank -1" <|
-                        \_ -> Expect.err (Parser.run Pgn.rank "-1")
-                    , test "invalid rank A" <|
-                        \_ -> Expect.err (Parser.run Pgn.rank "A")
-                    ]
-                , describe "moveNumber"
-                    [ test "valid moveNumber 1." <|
-                        \_ -> Expect.equal (Parser.run Pgn.moveNumber "1.") (Ok ())
-                    , test "valid moveNumber 5." <|
-                        \_ -> Expect.equal (Parser.run Pgn.moveNumber "5.") (Ok ())
-                    , test "multiple digits" <|
-                        \_ -> Expect.equal (Parser.run Pgn.moveNumber "22.") (Ok ())
-                    , test "zero" <|
-                        \_ -> Expect.err (Parser.run Pgn.moveNumber "0.")
-                    , test "Missing dot" <|
-                        \_ -> Expect.err (Parser.run Pgn.moveNumber "1")
-                    ]
-                , describe "file"
-                    [ test "valid file: a" <|
-                        \_ -> Expect.equal (Parser.run Pgn.file "a") (Ok 0)
-                    , test "valid file: h" <|
-                        \_ -> Expect.equal (Parser.run Pgn.file "h") (Ok 7)
-                    , test "invalid file: 1" <|
-                        \_ -> Expect.err (Parser.run Pgn.file "1")
-                    , test "empty string" <|
-                        \_ -> Expect.err (Parser.run Pgn.file "")
-                    ]
-                , describe "square"
-                    [ test "valid square: a1" <|
-                        \_ -> Expect.equal (Parser.run Pgn.square "a1") (Ok (Square 0 0))
-                    , test "valid square: h8" <|
-                        \_ -> Expect.equal (Parser.run Pgn.square "h8") (Ok (Square 7 7))
-                    , test "invalid square: 1" <|
-                        \_ -> Expect.err (Parser.run Pgn.square "1")
-                    , test "invalid square: a" <|
-                        \_ -> Expect.err (Parser.run Pgn.square "a")
-                    , test "empty string" <|
-                        \_ -> Expect.err (Parser.run Pgn.square "")
-                    ]
-                , describe "piece kind"
-                    [ test "rook" <|
-                        \_ -> Expect.equal (Parser.run Pgn.pieceKind "R") (Ok Piece.Rook)
-                    , test "knight" <|
-                        \_ -> Expect.equal (Parser.run Pgn.pieceKind "N") (Ok Piece.Knight)
-                    , test "bishop" <|
-                        \_ -> Expect.equal (Parser.run Pgn.pieceKind "B") (Ok Piece.Bishop)
-                    , test "king" <|
-                        \_ -> Expect.equal (Parser.run Pgn.pieceKind "K") (Ok Piece.King)
-                    , test "queen" <|
-                        \_ -> Expect.equal (Parser.run Pgn.pieceKind "Q") (Ok Piece.Queen)
-                    , test "lowercase" <|
-                        \_ -> Expect.err (Parser.run Pgn.pieceKind "b")
-                    , test "symbol" <|
-                        \_ -> Expect.err (Parser.run Pgn.pieceKind ".")
-                    , test "empty string" <|
-                        \_ -> Expect.err (Parser.run Pgn.pieceKind "")
+            describe "putting it together"
+                [ describe "ply" <|
+                    [ test "pawn advance a4" <|
+                        \_ -> Expect.equal (Ok (Pgn.PawnAdvance (Square 3 0) Nothing)) (Parser.run Pgn.ply "a4")
                     ]
                 ]
+        , describe "building blocks"
+            [ describe "pawnAdvance"
+                [ test "a4" <|
+                    \_ -> Expect.equal (Parser.run Pgn.pawnAdvance "a4") (Ok (Pgn.PawnAdvance (Square 3 0) Nothing))
+                , test "e3" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.pawnAdvance "e3") (Ok (Pgn.PawnAdvance (Square 2 4) Nothing))
+                ]
+            , describe "pawnAdvanceWithPromotion"
+                [ test "Legal promotion e8=Q" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.pawnAdvanceWithPromotion "e8=Q") (Ok (Pgn.PawnAdvance (Square 7 4) (Just Piece.Queen)))
+                , test "Illegal but parseable promotion e5=Q" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.pawnAdvanceWithPromotion "e5=Q") (Ok (Pgn.PawnAdvance (Square 4 4) (Just Piece.Queen)))
+                ]
+            , describe "pawnCapture"
+                [ test "exd5" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.pawnCapture "exd5") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 4 3, promotion = Nothing }))
+                ]
+            , describe "pawnCaptureWithPromotion"
+                [ test "Illegal but parseable promotion exd5=Q" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.pawnCaptureWithPromotion "exd5=Q") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 4 3, promotion = Just Piece.Queen }))
+                , test "Legal capture with promotion exd8=Q" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.pawnCaptureWithPromotion "exd8=Q") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 7 3, promotion = Just Piece.Queen }))
+                ]
+            , describe "promotion suffix"
+                [ test "=Q" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.promotion "=Q") (Ok Piece.Queen)
+                , test "=N" <|
+                    \_ ->
+                        Expect.equal (Parser.run Pgn.promotion "=N") (Ok Piece.Knight)
+                ]
+            , describe "findPawnThatCanMoveToPosition"
+                [ test "a4" <|
+                    \_ ->
+                        Expect.equal (Position.findPawnThatCanMoveToSquare (Square 3 0) Position.initial) (Just (Square 1 0))
+                , test "a3" <|
+                    \_ ->
+                        Expect.equal (Position.findPawnThatCanMoveToSquare (Square 2 0) Position.initial) (Just (Square 1 0))
+                , test "a6" <|
+                    \_ ->
+                        Expect.equal (Position.findPawnThatCanMoveToSquare (Square 5 0) kingPawnOpening) (Just (Square 6 0))
+                , test "a5" <|
+                    \_ ->
+                        Expect.equal (Position.findPawnThatCanMoveToSquare (Square 4 0) kingPawnOpening) (Just (Square 6 0))
+                , test "square too far from pawn" <|
+                    \_ ->
+                        Expect.equal (Position.findPawnThatCanMoveToSquare (Square 5 0) Position.initial) Nothing
+                , test "file without pawn" <|
+                    \_ ->
+                        Expect.equal (Position.findPawnThatCanMoveToSquare (Square 3 0) positionWithNoWhiteAPawn) Nothing
+                ]
+            , describe "rank"
+                [ test "valid rank" <|
+                    \_ -> Expect.equal (Parser.run Pgn.rank "1") (Ok 0)
+                , test "invalid rank 9" <|
+                    \_ -> Expect.err (Parser.run Pgn.rank "9")
+                , test "invalid rank -1" <|
+                    \_ -> Expect.err (Parser.run Pgn.rank "-1")
+                , test "invalid rank A" <|
+                    \_ -> Expect.err (Parser.run Pgn.rank "A")
+                ]
+            , describe "moveNumber"
+                [ test "valid moveNumber 1." <|
+                    \_ -> Expect.equal (Parser.run Pgn.moveNumber "1.") (Ok ())
+                , test "valid moveNumber 5." <|
+                    \_ -> Expect.equal (Parser.run Pgn.moveNumber "5.") (Ok ())
+                , test "multiple digits" <|
+                    \_ -> Expect.equal (Parser.run Pgn.moveNumber "22.") (Ok ())
+                , test "zero" <|
+                    \_ -> Expect.err (Parser.run Pgn.moveNumber "0.")
+                , test "Missing dot" <|
+                    \_ -> Expect.err (Parser.run Pgn.moveNumber "1")
+                ]
+            , describe "file"
+                [ test "valid file: a" <|
+                    \_ -> Expect.equal (Parser.run Pgn.file "a") (Ok 0)
+                , test "valid file: h" <|
+                    \_ -> Expect.equal (Parser.run Pgn.file "h") (Ok 7)
+                , test "invalid file: 1" <|
+                    \_ -> Expect.err (Parser.run Pgn.file "1")
+                , test "empty string" <|
+                    \_ -> Expect.err (Parser.run Pgn.file "")
+                ]
+            , describe "square"
+                [ test "valid square: a1" <|
+                    \_ -> Expect.equal (Parser.run Pgn.square "a1") (Ok (Square 0 0))
+                , test "valid square: h8" <|
+                    \_ -> Expect.equal (Parser.run Pgn.square "h8") (Ok (Square 7 7))
+                , test "invalid square: 1" <|
+                    \_ -> Expect.err (Parser.run Pgn.square "1")
+                , test "invalid square: a" <|
+                    \_ -> Expect.err (Parser.run Pgn.square "a")
+                , test "empty string" <|
+                    \_ -> Expect.err (Parser.run Pgn.square "")
+                ]
+            , describe "piece kind"
+                [ test "rook" <|
+                    \_ -> Expect.equal (Parser.run Pgn.pieceKind "R") (Ok Piece.Rook)
+                , test "knight" <|
+                    \_ -> Expect.equal (Parser.run Pgn.pieceKind "N") (Ok Piece.Knight)
+                , test "bishop" <|
+                    \_ -> Expect.equal (Parser.run Pgn.pieceKind "B") (Ok Piece.Bishop)
+                , test "king" <|
+                    \_ -> Expect.equal (Parser.run Pgn.pieceKind "K") (Ok Piece.King)
+                , test "queen" <|
+                    \_ -> Expect.equal (Parser.run Pgn.pieceKind "Q") (Ok Piece.Queen)
+                , test "lowercase" <|
+                    \_ -> Expect.err (Parser.run Pgn.pieceKind "b")
+                , test "symbol" <|
+                    \_ -> Expect.err (Parser.run Pgn.pieceKind ".")
+                , test "empty string" <|
+                    \_ -> Expect.err (Parser.run Pgn.pieceKind "")
+                ]
+            ]
         , describe "fromPgn"
             [ test "Initial position" <|
                 \_ ->
