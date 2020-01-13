@@ -40,19 +40,16 @@ suite =
             [ describe "ply" <|
                 [ test "pawn advance a4" <|
                     \_ -> Expect.equal (Ok (Pgn.PawnAdvance (Square 3 0) Nothing)) (Parser.run Pgn.ply "a4")
+                , test "pawn capture dxe4" <|
+                    \_ -> Expect.equal (Ok (Pgn.PawnCapture { startFile = 3, end = Square 3 4, promotion = Nothing })) (Parser.run Pgn.ply "dxe4")
+                , test "pawn capture dxe1=Q" <|
+                    \_ -> Expect.equal (Ok (Pgn.PawnCapture { startFile = 3, end = Square 0 4, promotion = Just Piece.Queen })) (Parser.run Pgn.ply "dxe1=Q")
                 , test "kingside castle" <|
                     \_ -> Expect.equal (Parser.run Pgn.ply "O-O") (Ok Pgn.KingsideCastle)
                 ]
             ]
         , describe "building blocks"
-            [ describe "pawnAdvance"
-                [ test "a4" <|
-                    \_ -> Expect.equal (Parser.run Pgn.pawnAdvance "a4") (Ok (Pgn.PawnAdvance (Square 3 0) Nothing))
-                , test "e3" <|
-                    \_ ->
-                        Expect.equal (Parser.run Pgn.pawnAdvance "e3") (Ok (Pgn.PawnAdvance (Square 2 4) Nothing))
-                ]
-            , describe "castle"
+            [ describe "castle"
                 [ test "kingside" <|
                     \_ -> Expect.equal (Parser.run Pgn.castle "O-O") (Ok Pgn.KingsideCastle)
                 , test "queenside" <|
@@ -62,34 +59,13 @@ suite =
                 , test "garbage 2" <|
                     \_ -> Expect.err (Parser.run Pgn.castle "O-")
                 ]
-            , describe "pawnAdvanceWithPromotion"
-                [ test "Legal promotion e8=Q" <|
-                    \_ ->
-                        Expect.equal (Parser.run Pgn.pawnAdvanceWithPromotion "e8=Q") (Ok (Pgn.PawnAdvance (Square 7 4) (Just Piece.Queen)))
-                , test "Illegal but parseable promotion e5=Q" <|
-                    \_ ->
-                        Expect.equal (Parser.run Pgn.pawnAdvanceWithPromotion "e5=Q") (Ok (Pgn.PawnAdvance (Square 4 4) (Just Piece.Queen)))
-                ]
-            , describe "pawnCapture"
-                [ test "exd5" <|
-                    \_ ->
-                        Expect.equal (Parser.run Pgn.pawnCapture "exd5") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 4 3, promotion = Nothing }))
-                ]
-            , describe "pawnCaptureWithPromotion"
-                [ test "Illegal but parseable promotion exd5=Q" <|
-                    \_ ->
-                        Expect.equal (Parser.run Pgn.pawnCaptureWithPromotion "exd5=Q") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 4 3, promotion = Just Piece.Queen }))
-                , test "Legal capture with promotion exd8=Q" <|
-                    \_ ->
-                        Expect.equal (Parser.run Pgn.pawnCaptureWithPromotion "exd8=Q") (Ok (Pgn.PawnCapture { startFile = 4, end = Square 7 3, promotion = Just Piece.Queen }))
-                ]
             , describe "promotion suffix"
                 [ test "=Q" <|
                     \_ ->
-                        Expect.equal (Parser.run Pgn.promotion "=Q") (Ok Piece.Queen)
+                        Expect.equal (Parser.run Pgn.promotion "=Q") (Ok (Just Piece.Queen))
                 , test "=N" <|
                     \_ ->
-                        Expect.equal (Parser.run Pgn.promotion "=N") (Ok Piece.Knight)
+                        Expect.equal (Parser.run Pgn.promotion "=N") (Ok (Just Piece.Knight))
                 ]
             , describe "findPawnThatCanMoveToPosition"
                 [ test "a4" <|

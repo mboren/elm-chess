@@ -20,7 +20,7 @@ ply : Parser PgnPly
 ply =
     oneOf
         [ castle
-        , pawnAdvance
+        , pawnPly
         ]
 
 
@@ -43,40 +43,48 @@ castle =
         |> andThen stringToCastle
 
 
-pawnAdvance : Parser PgnPly
-pawnAdvance =
-    square |> andThen (\s -> succeed (PawnAdvance s Nothing))
+type PawnTargetData
+    = AdvanceData Square.Rank
+    | CaptureData Square
 
 
-pawnAdvanceWithPromotion : Parser PgnPly
-pawnAdvanceWithPromotion =
-    succeed (\sq prom -> PawnAdvance sq (Just prom))
-        |= square
+pawnTarget : Parser PawnTargetData
+pawnTarget =
+    oneOf
+        [ succeed AdvanceData
+            |= rank
+        , succeed CaptureData
+            |. symbol "x"
+            |= square
+        ]
+
+
+constructPawnPly : Square.File -> PawnTargetData -> Maybe Piece.PieceKind -> PgnPly
+constructPawnPly startFile target parsedPromotion =
+    case target of
+        AdvanceData r ->
+            PawnAdvance (Square r startFile) parsedPromotion
+
+        CaptureData s ->
+            PawnCapture { startFile = startFile, end = s, promotion = parsedPromotion }
+
+
+pawnPly : Parser PgnPly
+pawnPly =
+    succeed constructPawnPly
+        |= file
+        |= pawnTarget
         |= promotion
 
 
-promotion : Parser Piece.PieceKind
+promotion : Parser (Maybe Piece.PieceKind)
 promotion =
-    succeed identity
-        |. symbol "="
-        |= pieceKind
-
-
-pawnCapture : Parser PgnPly
-pawnCapture =
-    succeed (\f e -> PawnCapture { startFile = f, end = e, promotion = Nothing })
-        |= file
-        |. symbol "x"
-        |= square
-
-
-pawnCaptureWithPromotion : Parser PgnPly
-pawnCaptureWithPromotion =
-    succeed (\f e p -> PawnCapture { startFile = f, end = e, promotion = Just p })
-        |= file
-        |. symbol "x"
-        |= square
-        |= promotion
+    oneOf
+        [ succeed Just
+            |. symbol "="
+            |= pieceKind
+        , succeed Nothing
+        ]
 
 
 pieceKind : Parser Piece.PieceKind
