@@ -21,6 +21,7 @@ ply =
     oneOf
         [ castle
         , pawnPly
+        , regularPly
         ]
 
 
@@ -41,6 +42,80 @@ castle =
     chompWhile (\c -> c == 'O' || c == '-')
         |> getChompedString
         |> andThen stringToCastle
+
+
+type PlyPart
+    = RankPart Square.Rank
+    | FilePart Square.File
+    | CapturePart
+
+
+plyPart : Parser (Maybe PlyPart)
+plyPart =
+    oneOf
+        [ succeed (Just << RankPart)
+            |= rank
+        , succeed (Just << FilePart)
+            |= file
+        , succeed (Just CapturePart)
+            |. symbol "x"
+        , succeed Nothing
+        ]
+
+
+constructStandardPlyFromParts : Piece.PieceKind -> Maybe PlyPart -> Maybe PlyPart -> Maybe PlyPart -> Maybe PlyPart -> Maybe PlyPart -> Maybe PgnPly
+constructStandardPlyFromParts piece part1 part2 part3 part4 part5 =
+    let
+        parts =
+            [ part1, part2, part3, part4, part5 ]
+    in
+    case parts of
+        [ Just (FilePart f), Just (RankPart r), Nothing, Nothing, Nothing ] ->
+            Just (Standard { pieceKind = piece, startRank = Nothing, startFile = Nothing, end = Square r f })
+
+        [ Just CapturePart, Just (FilePart f), Just (RankPart r), Nothing, Nothing ] ->
+            Just (Capture { pieceKind = piece, startRank = Nothing, startFile = Nothing, end = Square r f })
+
+        [ Just (FilePart sf), Just (FilePart f), Just (RankPart r), Nothing, Nothing ] ->
+            Just (Standard { pieceKind = piece, startRank = Nothing, startFile = Just sf, end = Square r f })
+
+        [ Just (FilePart sf), Just CapturePart, Just (FilePart f), Just (RankPart r), Nothing ] ->
+            Just (Capture { pieceKind = piece, startRank = Nothing, startFile = Just sf, end = Square r f })
+
+        [ Just (RankPart sr), Just (FilePart f), Just (RankPart r), Nothing, Nothing ] ->
+            Just (Standard { pieceKind = piece, startRank = Just sr, startFile = Nothing, end = Square r f })
+
+        [ Just (RankPart sr), Just CapturePart, Just (FilePart f), Just (RankPart r), Nothing ] ->
+            Just (Capture { pieceKind = piece, startRank = Just sr, startFile = Nothing, end = Square r f })
+
+        [ Just (FilePart sf), Just (RankPart sr), Just (FilePart f), Just (RankPart r), Nothing ] ->
+            Just (Standard { pieceKind = piece, startRank = Just sr, startFile = Just sf, end = Square r f })
+
+        [ Just (FilePart sf), Just (RankPart sr), Just CapturePart, Just (FilePart f), Just (RankPart r) ] ->
+            Just (Capture { pieceKind = piece, startRank = Just sr, startFile = Just sf, end = Square r f })
+
+        _ ->
+            Nothing
+
+
+regularPly : Parser PgnPly
+regularPly =
+    succeed constructStandardPlyFromParts
+        |= pieceKind
+        |= plyPart
+        |= plyPart
+        |= plyPart
+        |= plyPart
+        |= plyPart
+        |> andThen
+            (\maybe ->
+                case maybe of
+                    Nothing ->
+                        problem "found an invalid ply"
+
+                    Just pgnPly ->
+                        succeed pgnPly
+            )
 
 
 type PawnTargetData

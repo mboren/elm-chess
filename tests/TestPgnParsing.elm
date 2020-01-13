@@ -46,6 +46,22 @@ suite =
                     \_ -> Expect.equal (Ok (Pgn.PawnCapture { startFile = 3, end = Square 0 4, promotion = Just Piece.Queen })) (Parser.run Pgn.ply "dxe1=Q")
                 , test "kingside castle" <|
                     \_ -> Expect.equal (Parser.run Pgn.ply "O-O") (Ok Pgn.KingsideCastle)
+                , test "Nf3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Standard { pieceKind = Piece.Knight, startRank = Nothing, startFile = Nothing, end = Square 2 5 })) (Parser.run Pgn.ply "Nf3")
+                , test "Nxf3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Capture { pieceKind = Piece.Knight, startRank = Nothing, startFile = Nothing, end = Square 2 5 })) (Parser.run Pgn.ply "Nxf3")
+                , test "Ngxf3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Capture { pieceKind = Piece.Knight, startRank = Nothing, startFile = Just 6, end = Square 2 5 })) (Parser.run Pgn.ply "Ngxf3")
+                , test "Ngf3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Standard { pieceKind = Piece.Knight, startRank = Nothing, startFile = Just 6, end = Square 2 5 })) (Parser.run Pgn.ply "Ngf3")
+                , test "N1xf3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Capture { pieceKind = Piece.Knight, startRank = Just 0, startFile = Nothing, end = Square 2 5 })) (Parser.run Pgn.ply "N1xf3")
+                , test "N1f3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Standard { pieceKind = Piece.Knight, startRank = Just 0, startFile = Nothing, end = Square 2 5 })) (Parser.run Pgn.ply "N1f3")
+                , test "Ng1xf3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Capture { pieceKind = Piece.Knight, startRank = Just 0, startFile = Just 6, end = Square 2 5 })) (Parser.run Pgn.ply "Ng1xf3")
+                , test "Ng1f3" <|
+                    \_ -> Expect.equal (Ok (Pgn.Standard { pieceKind = Piece.Knight, startRank = Just 0, startFile = Just 6, end = Square 2 5 })) (Parser.run Pgn.ply "Ng1f3")
                 ]
             ]
         , describe "building blocks"
