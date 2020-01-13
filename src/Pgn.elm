@@ -16,6 +16,25 @@ type PgnPly
     | Standard { pieceKind : Piece.PieceKind, startRank : Maybe Square.Rank, startFile : Maybe Square.File, end : Square }
 
 
+moves : Parser (List PgnPly)
+moves =
+    loop [] movesHelp
+
+
+movesHelp : List PgnPly -> Parser (Step (List PgnPly) (List PgnPly))
+movesHelp plies =
+    succeed identity
+        |. spaces
+        |= oneOf
+            [ succeed (Loop plies)
+                |. moveNumber
+            , succeed (\p -> Loop (p :: plies))
+                |= ply
+            , succeed ()
+                |> map (\_ -> Done (List.reverse plies))
+            ]
+
+
 ply : Parser PgnPly
 ply =
     oneOf
@@ -200,7 +219,8 @@ stringToPieceKind s =
 moveNumber : Parser ()
 moveNumber =
     succeed ()
-        |. chompWhile (\c -> Char.isDigit c && c /= '0')
+        |. chompIf Char.isDigit
+        |. chompWhile Char.isDigit
         |. symbol "."
 
 

@@ -63,6 +63,52 @@ suite =
                 , test "Ng1f3" <|
                     \_ -> Expect.equal (Ok (Pgn.Standard { pieceKind = Piece.Knight, startRank = Just 0, startFile = Just 6, end = Square 2 5 })) (Parser.run Pgn.ply "Ng1f3")
                 ]
+            , describe "moves" <|
+                [ test "Initial position" <|
+                    \_ ->
+                        Expect.equal (Ok []) (Parser.run Pgn.moves "")
+                , test "move number followed by garbage" <|
+                    \_ ->
+                        Expect.err (Parser.run Pgn.moves "1. jjjjjj")
+                , test "garbage" <|
+                    \_ ->
+                        Expect.err (Parser.run Pgn.moves "jjjjjj")
+                , test "Single ply" <|
+                    \_ -> Expect.equal (Ok [ Pgn.PawnAdvance (Square 3 4) Nothing ]) (Parser.run Pgn.moves "1. e4")
+                , test "Single unambiguous knight move without start coordinates" <|
+                    \_ ->
+                        Expect.equal (Ok [ Pgn.Standard { pieceKind = Piece.Knight, startRank = Nothing, startFile = Nothing, end = Square 2 5 } ]) (Parser.run Pgn.moves "1. Nf3")
+                , test "Two plies" <|
+                    \_ ->
+                        let
+                            expectedPosition =
+                                [ Pgn.PawnAdvance (Square 3 4) Nothing
+                                , Pgn.PawnAdvance (Square 4 4) Nothing
+                                ]
+                        in
+                        Expect.equal (Ok expectedPosition) (Parser.run Pgn.moves "1. e4 e5")
+                , test "Three plies" <|
+                    \_ ->
+                        let
+                            expectedPosition =
+                                [ Pgn.PawnAdvance (Square 3 4) Nothing
+                                , Pgn.PawnAdvance (Square 4 4) Nothing
+                                , Pgn.Standard { pieceKind = Piece.Bishop, startRank = Nothing, startFile = Nothing, end = Square 4 1 }
+                                ]
+                        in
+                        Expect.equal (Ok expectedPosition) (Parser.run Pgn.moves "1. e4 e5 2. Bb5")
+                , test "Four plies" <|
+                    \_ ->
+                        let
+                            expectedPosition =
+                                [ Pgn.PawnAdvance (Square 3 4) Nothing
+                                , Pgn.PawnAdvance (Square 4 4) Nothing
+                                , Pgn.Standard { pieceKind = Piece.Bishop, startRank = Nothing, startFile = Nothing, end = Square 4 1 }
+                                , Pgn.PawnAdvance (Square 5 2) Nothing
+                                ]
+                        in
+                        Expect.equal (Ok expectedPosition) (Parser.run Pgn.moves "1. e4 e5 2. Bb5 c6")
+                ]
             ]
         , describe "building blocks"
             [ describe "castle"
