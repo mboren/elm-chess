@@ -151,17 +151,19 @@ toString move =
 
                 context =
                     {- With rooks and knights there can be situations where just giving the piece name and end
-                    square is ambiguous. For proper notation, we would only provide the minimum amount of information
-                    necessary to resolve ambiguity (in order of preference: Nothing, only rank, only file, both rank and
-                    file), but for now i'm just going to add both every time.
+                       square is ambiguous. For proper notation, we would only provide the minimum amount of information
+                       necessary to resolve ambiguity (in order of preference: Nothing, only rank, only file, both rank and
+                       file), but for now i'm just going to add both every time.
                     -}
                     case data.piece.kind of
                         Piece.Rook ->
                             Square.toString data.start
+
                         Piece.Knight ->
                             Square.toString data.start
-                        _ -> ""
 
+                        _ ->
+                            ""
 
                 takesString =
                     case data.takes of
