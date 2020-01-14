@@ -743,7 +743,7 @@ applyPgnPly p position =
 
                                 -- TODO this doesnt handle en passant
                                 pawnSquare =
-                                    Square (data.end.rank + direction) data.startFile
+                                    Square (data.end.rank - direction) data.startFile
 
                                 capturedPiece =
                                     get pos data.end
