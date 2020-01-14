@@ -231,7 +231,9 @@ square =
 
 rank : Parser Square.Rank
 rank =
-    int |> andThen intToRank
+    chompIf isValidRankChar
+        |> getChompedString
+        |> andThen stringToRank
 
 
 file : Parser Square.File
@@ -239,6 +241,11 @@ file =
     chompIf isValidFileChar
         |> getChompedString
         |> andThen stringToFile
+
+
+isValidRankChar : Char -> Bool
+isValidRankChar c =
+    Char.toCode '1' <= Char.toCode c && Char.toCode c <= Char.toCode '8'
 
 
 isValidFileChar : Char -> Bool
@@ -249,6 +256,19 @@ isValidFileChar c =
 isValidPieceKind : Char -> Bool
 isValidPieceKind c =
     List.member c [ 'R', 'N', 'B', 'K', 'Q' ]
+
+
+stringToRank : String -> Parser Square.Rank
+stringToRank s =
+    case String.uncons s of
+        Just ( c, "" ) ->
+            succeed (Char.toCode c - Char.toCode '1')
+
+        Just ( c, t ) ->
+            problem ("Multiple chars found for file: " ++ s)
+
+        Nothing ->
+            problem "empty string is not a valid file"
 
 
 stringToFile : String -> Parser Square.File
