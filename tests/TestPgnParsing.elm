@@ -231,7 +231,7 @@ suite =
                 \_ ->
                     let
                         expectedPosition =
-                            Position.makeMove Position.initial (basicPly (Square 1 6) (Square 2 5) Piece.Knight WhitePlayer)
+                            Position.makeMove Position.initial (basicPly (Square 0 6) (Square 2 5) Piece.Knight WhitePlayer)
                                 |> Result.fromMaybe ""
                     in
                     Expect.equal (Position.fromPgn "1. Nf3") expectedPosition
@@ -239,7 +239,7 @@ suite =
                 \_ ->
                     let
                         expectedPosition =
-                            Position.makeMove Position.initial (basicPly (Square 1 6) (Square 2 5) Piece.Knight WhitePlayer)
+                            Position.makeMove Position.initial (basicPly (Square 0 6) (Square 2 5) Piece.Knight WhitePlayer)
                                 |> Result.fromMaybe ""
                     in
                     Expect.equal (Position.fromPgn "1. Ng1f3") expectedPosition
@@ -258,7 +258,7 @@ suite =
                         expectedPosition =
                             Position.makeMove Position.initial (basicPly (Square 1 4) (Square 3 4) Pawn WhitePlayer)
                                 |> Maybe.andThen (\x -> Position.makeMove x (basicPly (Square 6 4) (Square 4 4) Pawn Player.BlackPlayer))
-                                |> Maybe.andThen (\x -> Position.makeMove x (basicPly (Square 1 5) (Square 4 1) Bishop WhitePlayer))
+                                |> Maybe.andThen (\x -> Position.makeMove x (basicPly (Square 0 5) (Square 4 1) Bishop WhitePlayer))
                                 |> Result.fromMaybe ""
                     in
                     Expect.equal (Position.fromPgn "1. e4 e5 2. Bb5") expectedPosition
