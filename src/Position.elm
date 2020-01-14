@@ -741,16 +741,37 @@ applyPgnPly p position =
                                 direction =
                                     Player.direction pos.playerToMove
 
-                                -- TODO this doesnt handle en passant
                                 pawnSquare =
                                     Square (data.end.rank - direction) data.startFile
 
                                 capturedPiece =
                                     get pos data.end
+
+                                enPassantCaptureSquare =
+                                    Square pawnSquare.rank data.end.file
+
+                                enPassantCapture =
+                                    get pos enPassantCaptureSquare
                             in
                             case capturedPiece of
                                 Nothing ->
-                                    Err ("No piece at " ++ Square.toString data.end ++ " to capture")
+                                    case enPassantCapture of
+                                        Nothing ->
+                                            Err ("No piece at " ++ Square.toString data.end ++ ", or " ++ Square.toString enPassantCaptureSquare ++ " to capture")
+
+                                        Just cp ->
+                                            if cp.kind == Piece.Pawn then
+                                                Ok
+                                                    (Ply.EnPassant
+                                                        { player = player
+                                                        , start = pawnSquare
+                                                        , end = data.end
+                                                        , takenPawn = Square pawnSquare.rank data.end.file
+                                                        }
+                                                    )
+
+                                            else
+                                                Err ("No piece at " ++ Square.toString data.end ++ " to capture")
 
                                 Just cp ->
                                     Ok (Ply.StandardMove { player = pos.playerToMove, piece = Piece Piece.Pawn pos.playerToMove, start = pawnSquare, end = data.end, takes = capturedPiece, promotion = Maybe.map (\kind -> Piece kind pos.playerToMove) data.promotion })
@@ -906,6 +927,7 @@ fromPgn text =
         let
             parsedPlies =
                 Parser.run Pgn.moves text
+                    |> Debug.log "Parsed plies"
         in
         case parsedPlies of
             Ok plies ->
