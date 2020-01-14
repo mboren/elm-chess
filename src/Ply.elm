@@ -188,10 +188,10 @@ toString move =
                 |> String.join ""
 
         QueensideCastle _ ->
-            "0-0-0"
+            "O-O-O"
 
         KingsideCastle _ ->
-            "0-0"
+            "O-O"
 
 
 toThreat : Ply -> Maybe Square
