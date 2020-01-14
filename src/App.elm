@@ -112,6 +112,7 @@ view model =
             , drawStatus model
             , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just DebugLogPosition, label = Element.text "Log position" }
             , drawDebugInfo model
+            , drawPgnParsingAutoTestResults model.position
             ]
         )
 
@@ -138,6 +139,28 @@ drawStatus model =
 drawHistory : Position -> Element Msg
 drawHistory position =
     History.toStrings position.history |> String.join " " |> Element.text
+
+drawPgnParsingAutoTestResults : Position -> Element Msg
+drawPgnParsingAutoTestResults position =
+    let
+        pgnText = History.toStrings position.history |> String.join " "
+        pgnParsingResult = Position.fromPgn pgnText
+        resultText =
+            case pgnParsingResult of
+                Ok pos ->
+                    if pos == position then
+                        "Ok"
+                    else
+                        let
+                            parsedPosition = Debug.log "Parsed position" pos
+                            currentPosition = Debug.log "Actual position" position
+                        in
+                        "Parsed position does not match current position! See console for details."
+                Err err ->
+                    err
+    in
+    Element.text resultText
+
 
 
 drawDebugInfo : Model -> Element Msg
