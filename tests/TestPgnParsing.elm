@@ -273,6 +273,9 @@ suite =
                     Expect.ok (Position.fromPgn "1. Nf3 a6 2. Nc3 a5 3. Nd4 a4 4. Nc3b5")
             , test "Ruy lopez with white kingside castle" <|
                 \_ ->
-                    Expect.equal (Position.fromPgn "1. e4 e5 2. Ng1f3 Nb8c6 3. Bb5 a6 4. Ba4 b5 5. Bb3 Ng8f6 6. Nb1c3 d5 7. O-O") (Ok ruyLopezWithWhiteKingsideCastlePosition)
+                    Expect.equal (Ok ruyLopezWithWhiteKingsideCastlePosition) (Position.fromPgn "1. e4 e5 2. Ng1f3 Nb8c6 3. Bb5 a6 4. Ba4 b5 5. Bb3 Ng8f6 6. Nb1c3 d5 7. O-O")
+            , test "Ruy lopez with invalid white queenside castle should fail" <|
+                \_ ->
+                    Expect.err (Position.fromPgn "1. e4 e5 2. Ng1f3 Nb8c6 3. Bb5 a6 4. Ba4 b5 5. Bb3 Ng8f6 6. Nb1c3 d5 7. O-O-O")
             ]
         ]
