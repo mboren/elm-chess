@@ -2,8 +2,6 @@ module Pgn exposing (..)
 
 import Parser exposing (..)
 import Piece exposing (Piece)
-import Ply exposing (Ply)
-import Position exposing (Position)
 import Square exposing (Square)
 
 
