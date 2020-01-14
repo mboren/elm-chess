@@ -93,10 +93,10 @@ getStart ply =
             data.start
 
         QueensideCastle player ->
-            { rank = Player.lastRank player, file = 0 }
+            { rank = Player.lastRank player, file = 4 }
 
         KingsideCastle player ->
-            { rank = Player.lastRank player, file = 7 }
+            { rank = Player.lastRank player, file = 4 }
 
 
 getEnd : Ply -> Maybe Square
