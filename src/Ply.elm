@@ -183,8 +183,7 @@ toString move =
             pieceString ++ context ++ takesString ++ destinationString ++ promotionString
 
         EnPassant data ->
-            -- TODO this isn't proper notation
-            [ Square.fileToString data.start.file, "x", Square.toString data.takenPawn, "e.p." ]
+            [ Square.fileToString data.start.file, "x", Square.toString data.end ]
                 |> String.join ""
 
         QueensideCastle _ ->
