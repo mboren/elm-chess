@@ -16,6 +16,11 @@ empty =
     { pastMoves = [], latestPly = Nothing }
 
 
+moveNumber : History -> Int
+moveNumber history =
+    1 + List.length history.pastMoves
+
+
 add : Ply -> History -> History
 add ply history =
     case history.latestPly of
