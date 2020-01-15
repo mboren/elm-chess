@@ -1,8 +1,8 @@
 module History exposing (..)
 
-import Ply exposing (Ply)
 import Piece exposing (Piece)
 import Player exposing (Player)
+import Ply exposing (Ply)
 import Square exposing (Square)
 
 
@@ -25,10 +25,11 @@ add ply history =
         Just p ->
             { history | pastMoves = ( p, ply ) :: history.pastMoves, latestPly = Nothing }
 
+
 getTakenPieces : Player -> History -> List Piece
 getTakenPieces player history =
     getPlayerMoves (Player.otherPlayer player) history
-    |> List.filterMap (Ply.getTakenPiece)
+        |> List.filterMap Ply.getTakenPiece
 
 
 getLastPly : History -> Maybe Ply
@@ -50,10 +51,10 @@ toList : History -> List Ply
 toList history =
     case history.latestPly of
         Nothing ->
-            List.concatMap (\( w, b ) -> [ w, b ]) history.pastMoves
+            List.concatMap (\( w, b ) -> [ w, b ]) (List.reverse history.pastMoves)
 
         Just pl ->
-            pl :: List.concatMap (\( w, b ) -> [ w, b ]) history.pastMoves
+            List.concatMap (\( w, b ) -> [ w, b ]) (List.reverse history.pastMoves) ++ [ pl ]
 
 
 getPlayerMoves : Player -> History -> List Ply
