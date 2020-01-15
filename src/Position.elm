@@ -927,7 +927,6 @@ fromPgn text =
         let
             parsedPlies =
                 Parser.run Pgn.moves text
-                    |> Debug.log "Parsed plies"
         in
         case parsedPlies of
             Ok plies ->
@@ -939,3 +938,107 @@ fromPgn text =
                         Debug.log "Parsing error" err
                 in
                 Err "Parsing error"
+
+
+plyToString : Position -> Ply -> String
+plyToString position ply =
+    case ply of
+        Ply.StandardMove data ->
+            let
+                pieceString =
+                    case data.piece.kind of
+                        Piece.Pawn ->
+                            case data.takes of
+                                Nothing ->
+                                    ""
+
+                                Just _ ->
+                                    Square.fileToString data.start.file
+
+                        _ ->
+                            Piece.pieceKindToString data.piece.kind |> String.toUpper
+
+                matchingPieces =
+                    findPieces data.piece position
+
+                casesToDisambiguate =
+                    if List.length matchingPieces > 1 then
+                        matchingPieces |> List.filter (\s -> canPieceMoveBetweenSquares position s data.end)
+
+                    else
+                        []
+
+                context =
+                    case casesToDisambiguate of
+                        [] ->
+                            "" |> Debug.log "shouldnt happen"
+
+                        [ _ ] ->
+                            ""
+
+                        h :: t ->
+                            if 1 == List.length (List.filter (.file >> (==) data.start.file) casesToDisambiguate) then
+                                Square.fileToString data.start.file
+
+                            else if 1 == List.length (List.filter (.rank >> (==) data.start.rank) casesToDisambiguate) then
+                                Square.rankToString data.start.rank
+
+                            else
+                                Square.toString data.start
+
+                takesString =
+                    case data.takes of
+                        Nothing ->
+                            ""
+
+                        Just _ ->
+                            "x"
+
+                destinationString =
+                    Square.toString data.end
+
+                promotionString =
+                    Maybe.map (.kind >> Piece.pieceKindToString >> String.toUpper >> (\x -> "=" ++ x)) data.promotion
+                        |> Maybe.withDefault ""
+            in
+            pieceString ++ context ++ takesString ++ destinationString ++ promotionString
+
+        Ply.EnPassant data ->
+            [ Square.fileToString data.start.file, "x", Square.toString data.end ]
+                |> String.join ""
+
+        Ply.QueensideCastle _ ->
+            "O-O-O"
+
+        Ply.KingsideCastle _ ->
+            "O-O"
+
+
+toPgnHelp : Ply -> ( Position, List String ) -> ( Position, List String )
+toPgnHelp ply ( position, strings ) =
+    let
+        plyText =
+            plyToString position ply
+
+        nextPosition =
+            makeMove position ply
+                |> Maybe.withDefault initial
+
+        moveNumber =
+            if position.playerToMove == Player.WhitePlayer then
+                History.moveNumber nextPosition.history
+                    |> String.fromInt
+                    |> (\i -> i ++ ". ")
+
+            else
+                ""
+    in
+    ( nextPosition, (moveNumber ++ plyText) :: strings )
+
+
+toPgn : Position -> String
+toPgn position =
+    List.foldl toPgnHelp ( initial, [] ) (History.toList position.history)
+        |> Tuple.second
+        |> List.reverse
+        |> String.join " "

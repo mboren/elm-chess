@@ -138,29 +138,38 @@ drawStatus model =
 
 drawHistory : Position -> Element Msg
 drawHistory position =
-    History.toStrings position.history |> String.join " " |> Element.text
+    Element.text (Position.toPgn position)
+
 
 drawPgnParsingAutoTestResults : Position -> Element Msg
 drawPgnParsingAutoTestResults position =
     let
-        pgnText = History.toStrings position.history |> String.join " "
-        pgnParsingResult = Position.fromPgn pgnText
+        pgnText =
+            Position.toPgn position
+
+        pgnParsingResult =
+            Position.fromPgn pgnText
+
         resultText =
             case pgnParsingResult of
                 Ok pos ->
                     if pos == position then
                         "Ok"
+
                     else
                         let
-                            parsedPosition = Debug.log "Parsed position" pos
-                            currentPosition = Debug.log "Actual position" position
+                            parsedPosition =
+                                Debug.log "Parsed position" pos
+
+                            currentPosition =
+                                Debug.log "Actual position" position
                         in
                         "Parsed position does not match current position! See console for details."
+
                 Err err ->
                     err
     in
     Element.text resultText
-
 
 
 drawDebugInfo : Model -> Element Msg
