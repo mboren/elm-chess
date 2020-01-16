@@ -118,20 +118,25 @@ canKingsideCastle position =
         inBetweenSquaresAreClear =
             areSquaresUnoccupied position squaresKingWillMoveThrough
 
-        fakeKingMoves : List Ply
-        fakeKingMoves =
-            List.map (\sq -> Ply.StandardMove { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
-
-        squaresKingWouldMoveThroughNotThreatened =
-            List.map (wouldMoveLeavePlayerInCheck position.playerToMove position) fakeKingMoves |> List.any identity |> not
-
         inCheck =
             isPlayerInCheck position.playerToMove position
 
         hasRookBeenCaptured =
             History.hasCaptureHappenedOnSquare (Square rank 7) position.history
     in
-    not hasRookBeenCaptured && not inCheck && inBetweenSquaresAreClear && squaresKingWouldMoveThroughNotThreatened && not (History.hasKingMoved position.playerToMove position.history || History.hasKingsideRookMoved position.playerToMove position.history)
+    if not hasRookBeenCaptured && not inCheck && inBetweenSquaresAreClear && not (History.hasKingMoved position.playerToMove position.history || History.hasKingsideRookMoved position.playerToMove position.history) then
+        let
+            fakeKingMoves : List Ply
+            fakeKingMoves =
+                List.map (\sq -> Ply.StandardMove { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
+
+            squaresKingWouldMoveThroughNotThreatened =
+                List.map (wouldMoveLeavePlayerInCheck position.playerToMove position) fakeKingMoves |> List.any identity |> not
+        in
+        squaresKingWouldMoveThroughNotThreatened
+
+    else
+        False
 
 
 canQueensideCastle : Position -> Bool
@@ -146,20 +151,25 @@ canQueensideCastle position =
         inBetweenSquaresAreClear =
             areSquaresUnoccupied position inBetweenSquares
 
-        squaresKingWillMoveThrough =
-            [ 2, 3 ] |> List.map (Square rank)
-
-        fakeKingMoves : List Ply
-        fakeKingMoves =
-            List.map (\sq -> Ply.StandardMove { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
-
-        squaresKingWouldMoveThroughNotThreatened =
-            List.map (wouldMoveLeavePlayerInCheck position.playerToMove position) fakeKingMoves |> List.any identity |> not
-
         hasRookBeenCaptured =
             History.hasCaptureHappenedOnSquare (Square rank 0) position.history
     in
-    not hasRookBeenCaptured && not (isPlayerInCheck position.playerToMove position) && squaresKingWouldMoveThroughNotThreatened && inBetweenSquaresAreClear && not (History.hasKingMoved position.playerToMove position.history || History.hasQueensideRookMoved position.playerToMove position.history)
+    if not (History.hasKingMoved position.playerToMove position.history || History.hasQueensideRookMoved position.playerToMove position.history) && not hasRookBeenCaptured && not (isPlayerInCheck position.playerToMove position) && inBetweenSquaresAreClear then
+        let
+            squaresKingWillMoveThrough =
+                [ 2, 3 ] |> List.map (Square rank)
+
+            fakeKingMoves : List Ply
+            fakeKingMoves =
+                List.map (\sq -> Ply.StandardMove { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
+
+            squaresKingWouldMoveThroughNotThreatened =
+                List.map (wouldMoveLeavePlayerInCheck position.playerToMove position) fakeKingMoves |> List.any identity |> not
+        in
+        squaresKingWouldMoveThroughNotThreatened
+
+    else
+        False
 
 
 areSquaresUnoccupied : Position -> List Square -> Bool
