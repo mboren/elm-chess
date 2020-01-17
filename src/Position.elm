@@ -992,7 +992,11 @@ plyToString position ply =
 
                         h :: t ->
                             if 1 == List.length (List.filter (.file >> (==) data.start.file) casesToDisambiguate) then
-                                Square.fileToString data.start.file
+                                if data.piece.kind /= Piece.Pawn then
+                                    Square.fileToString data.start.file
+
+                                else
+                                    ""
 
                             else if 1 == List.length (List.filter (.rank >> (==) data.start.rank) casesToDisambiguate) then
                                 Square.rankToString data.start.rank
