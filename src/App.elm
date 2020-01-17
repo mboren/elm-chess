@@ -11,9 +11,9 @@ import Element.Input
 import EverySet exposing (EverySet)
 import History
 import Html exposing (Html)
-import Piece exposing (Piece)
+import Piece exposing (Piece, PieceKind(..))
 import Player exposing (Player(..))
-import Ply exposing (Ply, toSquareForMoveSelection)
+import Ply exposing (Ply(..))
 import Position exposing (Position)
 import Square exposing (File, Rank, Square)
 
