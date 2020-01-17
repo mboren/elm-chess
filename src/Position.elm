@@ -42,7 +42,7 @@ findPieces piece position =
     List.filter (hasPiece position) occupiedSquares
 
 
-isPlyValid : Ply -> Position -> Bool
+isPlyValid : Ply -> Position -> Result String ()
 isPlyValid ply position =
     let
         startSquare =
@@ -51,7 +51,12 @@ isPlyValid ply position =
         possiblePlies =
             getPossibleMovesForCurrentPlayerWithoutCheck position startSquare
     in
-    EverySet.member ply possiblePlies
+    if EverySet.member ply possiblePlies then
+        Ok ()
+    else if EverySet.member ply (getPossibleMovesForCurrentPlayerIgnoringCheck position startSquare) then
+        Err ("Moving from " ++ Square.toString (Ply.getStart ply) ++ " would result in check!")
+    else
+        Err "Illegal ply"
 
 
 doesCurrentPlayerHavePawnOnSquare : Square -> Position -> Bool
@@ -917,16 +922,15 @@ applyPgnPly p position =
                     Err e
 
                 Ok ply ->
-                    if isPlyValid ply pos then
-                        makeMove pos ply |> Result.fromMaybe "Failed to make move!"
-
-                    else
-                        let
-                            _ =
-                                Debug.log "Invalid ply: " ply
-                        in
-                        Err "Invalid ply!"
-
+                    case isPlyValid ply pos of
+                        Ok _ ->
+                            makeMove pos ply |> Result.fromMaybe "Failed to make move!"
+                        Err err ->
+                            let
+                                _ =
+                                    Debug.log "Invalid ply: " ply
+                            in
+                            Err err
 
 fromPgn : String -> Result String Position
 fromPgn text =
