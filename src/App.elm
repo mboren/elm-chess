@@ -78,12 +78,13 @@ update msg model =
                     let
                         newPosition =
                             Position.aiMove model.position 0
+                        status =
+                            if Position.isCurrentPlayerInCheckMate newPosition then
+                                Checkmate
+                            else
+                                SelectingPiece
                     in
-                    if Position.isCurrentPlayerInCheckMate newPosition then
-                        { model | position = newPosition, status = Checkmate }
-
-                    else
-                        { model | position = newPosition, status = SelectingPiece }
+                    { model | position = newPosition, status = status }
 
                 _ ->
                     model
