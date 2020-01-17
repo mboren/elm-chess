@@ -123,3 +123,12 @@ toString p =
 
                 Queen ->
                     "♛"
+
+value pieceKind =
+    case pieceKind of
+        Pawn -> 1
+        Rook -> 5
+        Knight -> 3
+        Bishop -> 3
+        King -> 0
+        Queen -> 50

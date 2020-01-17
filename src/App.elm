@@ -57,6 +57,7 @@ init =
 type Msg
     = SelectPiece Square
     | MoveTo Ply
+    | AiMove
     | DebugLogPosition
 
 
@@ -65,6 +66,22 @@ update msg model =
     case msg of
         SelectPiece square ->
             { model | status = SelectingMove square (Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position square) }
+
+        AiMove ->
+            case model.status of
+                SelectingPiece ->
+                    let
+                        newPosition =
+                            Position.aiMove model.position 0
+                    in
+                    if Position.isCurrentPlayerInCheckMate newPosition then
+                        { model | position = newPosition, status = Checkmate }
+
+                    else
+                        { model | position = newPosition, status = SelectingPiece }
+
+                _ ->
+                    model
 
         MoveTo ply ->
             case model.status of
@@ -111,6 +128,7 @@ view model =
             , drawHistory model.position
             , drawStatus model
             , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just DebugLogPosition, label = Element.text "Log position" }
+            , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just AiMove, label = Element.text "ai move" }
             , drawDebugInfo model
             , drawPgnParsingAutoTestResults model.position
             ]

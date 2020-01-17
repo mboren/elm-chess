@@ -1052,3 +1052,182 @@ toPgn position =
         |> Tuple.second
         |> List.reverse
         |> String.join " "
+
+
+aiMove : Position -> Int -> Position
+aiMove position seed =
+    let
+        allOptions =
+            generateAllMovesForCurrentPlayerWithoutCheck position
+                |> EverySet.toList
+                |> List.sortBy (plyScore position)
+                |> List.reverse
+
+        selectedMoveIndex =
+            modBy (List.length allOptions) seed
+
+        selectedMove =
+            List.drop (selectedMoveIndex - 1) allOptions |> List.head
+    in
+    case selectedMove of
+        Nothing ->
+            position
+
+        Just m ->
+            makeMove position m
+                |> Maybe.withDefault position
+
+
+plyScore : Position -> Ply -> Int
+plyScore position ply =
+    let
+        speculativePosition =
+            makeMove position ply
+    in
+    case speculativePosition of
+        Nothing ->
+            0
+
+        Just nextPosition ->
+            case ply of
+                Ply.KingsideCastle _ ->
+                    5
+
+                Ply.QueensideCastle _ ->
+                    6
+
+                Ply.EnPassant data ->
+                    4
+
+                Ply.StandardMove data ->
+                    let
+                        promotes =
+                            case data.promotion of
+                                Nothing ->
+                                    0
+
+                                Just _ ->
+                                    10
+
+                        takes =
+                            case data.takes of
+                                Nothing ->
+                                    0
+
+                                Just piece ->
+                                    1 + Piece.value piece.kind
+
+                        recentlyUsed =
+                            History.getPlayerMoves position.playerToMove position.history
+                                |> List.reverse
+                                |> List.head
+                                |> (\maybeP ->
+                                        case maybeP of
+                                            Nothing ->
+                                                0
+
+                                            Just p ->
+                                                if Ply.getEnd p == Just (Ply.getStart ply) then
+                                                    -3
+
+                                                else
+                                                    0
+                                   )
+
+                        pieceModifier =
+                            case data.piece.kind of
+                                Piece.King ->
+                                    if History.hasKingMoved position.playerToMove position.history then
+                                        -5
+
+                                    else
+                                        -7
+
+                                Piece.Queen ->
+                                    -2
+
+                                Piece.Pawn ->
+                                    let
+                                        rankMod =
+                                            if data.end.rank - data.start.rank > 1 then
+                                                1
+
+                                            else if data.end.rank == Player.lastRank position.playerToMove then
+                                                5
+
+                                            else
+                                                0
+
+                                        fileMod =
+                                            if data.end.file == 3 || data.end.file == 4 then
+                                                1
+
+                                            else
+                                                -1
+                                    in
+                                    rankMod + fileMod
+
+                                _ ->
+                                    0
+
+                        threatMod =
+                            let
+                                threat =
+                                    getSquareThreat nextPosition data.end
+                            in
+                            if threat >= 1 then
+                                -1 * Piece.value data.piece.kind
+
+                            else
+                                0
+
+                        totalThreat =
+                            -1 * totalThreatValue nextPosition
+
+                        checkModifier =
+                            case speculativePosition of
+                                Nothing ->
+                                    0
+
+                                Just pos ->
+                                    if isCurrentPlayerInCheckMate pos then
+                                        1000000000
+
+                                    else if isPlayerInCheck pos.playerToMove pos then
+                                        1
+
+                                    else
+                                        0
+                    in
+                    promotes + takes + pieceModifier + checkModifier + threatMod + totalThreat + recentlyUsed
+
+
+getSquareThreat position square =
+    generateAllMovesForCurrentPlayerWithoutCheck position
+        |> EverySet.filter (\p -> Ply.getEnd p == Just square)
+        |> EverySet.size
+
+
+totalThreatValue position =
+    let
+        otherPlayerAttacks =
+            generateAllMovesForCurrentPlayerWithoutCheck position
+                |> EverySet.map Ply.getEnd
+                |> EverySet.toList
+                |> List.filterMap identity
+                |> List.filterMap (get position)
+                |> List.map .kind
+                |> List.map Piece.value
+                |> List.sum
+
+        currentPlayerAttacks =
+            generateAllMovesForCurrentPlayerWithoutCheck { position | playerToMove = Player.otherPlayer position.playerToMove }
+                |> EverySet.map Ply.getEnd
+                |> EverySet.toList
+                |> List.filterMap identity
+                |> List.filterMap (get position)
+                |> List.map .kind
+                |> List.map Piece.value
+                |> List.sum
+    in
+    otherPlayerAttacks - currentPlayerAttacks
