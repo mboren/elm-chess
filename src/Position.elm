@@ -976,11 +976,7 @@ plyToString position ply =
                     findPieces data.piece position
 
                 casesToDisambiguate =
-                    if List.length matchingPieces > 1 then
-                        matchingPieces |> List.filter (\s -> canPieceMoveBetweenSquares position s data.end)
-
-                    else
-                        []
+                    List.filter (\s -> canPieceMoveBetweenSquares position s data.end) matchingPieces
 
                 context =
                     case casesToDisambiguate of
