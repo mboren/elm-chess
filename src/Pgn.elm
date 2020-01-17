@@ -296,3 +296,28 @@ intToRank i =
 
     else
         problem ("Invalid rank: " ++ String.fromInt i ++ ", must be in [1,8]")
+
+
+parsingErrorToString : DeadEnd -> String
+parsingErrorToString deadEnd =
+    let
+        location = "(row " ++ String.fromInt deadEnd.row ++ ", col " ++ String.fromInt deadEnd.col ++ ")"
+        mainText =
+            case deadEnd.problem of
+                Expecting expectedString -> "was expecting to find \"" ++ expectedString ++ "\""
+                ExpectingInt -> "expected an integer"
+                ExpectingSymbol symbol -> "expected the symbol " ++ symbol
+                ExpectingEnd -> "expected the string to end"
+                UnexpectedChar -> "found a character I was not expecting"
+                Problem problemText -> "ran into the error: \"" ++ problemText ++ "\""
+                BadRepeat -> "ran into a BadRepeat (idk what this means)"
+                _ -> "ran into an unexpected problem"
+    in
+    "I " ++ mainText ++ " at " ++ location
+
+parsingErrorsToString : List DeadEnd -> String
+parsingErrorsToString errors =
+    List.map (parsingErrorToString) errors
+    |> String.join ", "
+
+
