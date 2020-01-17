@@ -507,6 +507,9 @@ getPossibleMovesForCurrentPlayerWithoutCheck position square =
     getPossibleMoves True position.playerToMove position square
         |> EverySet.filter (not << wouldMoveLeavePlayerInCheck position.playerToMove position)
 
+getPossibleMovesForCurrentPlayerIgnoringCheck : Position -> Square -> EverySet Ply
+getPossibleMovesForCurrentPlayerIgnoringCheck position square =
+    getPossibleMoves True position.playerToMove position square
 
 getPossibleMoves : Bool -> Player -> Position -> Square -> EverySet Ply
 getPossibleMoves includeCastling player position square =
