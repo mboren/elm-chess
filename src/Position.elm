@@ -954,7 +954,7 @@ fromPgn text =
                     _ =
                         Debug.log "Parsing error" err
                 in
-                Err "Parsing error"
+                Err (Pgn.parsingErrorsToString err)
 
 
 plyToString : Position -> Ply -> String
