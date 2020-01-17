@@ -40,6 +40,8 @@ type GameStatus
 type alias Model =
     { position : Position
     , status : GameStatus
+    , pgnInput : String
+    , pgnParsingError : Maybe String
     }
 
 
@@ -47,6 +49,8 @@ init : Model
 init =
     { position = Position.initial
     , status = SelectingPiece
+    , pgnInput = ""
+    , pgnParsingError = Nothing
     }
 
 
@@ -59,6 +63,7 @@ type Msg
     | MoveTo Ply
     | AiMove
     | DebugLogPosition
+    | UpdatePgnInput String
 
 
 update : Msg -> Model -> Model
@@ -104,6 +109,14 @@ update msg model =
                 _ ->
                     model
 
+        UpdatePgnInput text ->
+            case Position.fromPgn text of
+                Ok newPosition ->
+                    { model | pgnInput = text, pgnParsingError = Nothing, position = newPosition }
+                Err error ->
+                    { model | pgnInput = text, pgnParsingError = Just error}
+
+
         DebugLogPosition ->
             let
                 _ =
@@ -131,8 +144,32 @@ view model =
             , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just AiMove, label = Element.text "ai move" }
             , drawDebugInfo model
             , drawPgnParsingAutoTestResults model.position
+            , drawPgnInput model
             ]
         )
+
+
+drawPgnInput : Model -> Element Msg
+drawPgnInput model =
+    let
+        (parsingStatusText, statusColor) =
+            case model.pgnParsingError of
+                Nothing ->
+                    ("Valid :)", Element.rgb255 0 200 0)
+                Just error ->
+                    (error, Element.rgb255 200 0 0)
+    in
+    Element.column []
+        [ Element.Input.multiline
+            []
+            { onChange = UpdatePgnInput
+            , text = model.pgnInput
+            , placeholder = Nothing
+            , label = Element.Input.labelAbove [] (Element.text "Enter a new position in PGN")
+            , spellcheck = False
+            }
+          , Element.el [Font.color statusColor] (Element.text parsingStatusText)
+         ]
 
 
 drawTakenPieces : List Piece -> Element Msg
