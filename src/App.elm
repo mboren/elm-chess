@@ -78,9 +78,11 @@ update msg model =
                     let
                         newPosition =
                             Position.aiMove model.position 0
+
                         status =
                             if Position.isCurrentPlayerInCheckMate newPosition then
                                 Checkmate
+
                             else
                                 SelectingPiece
                     in
@@ -153,12 +155,13 @@ view model =
 drawPgnInput : Model -> Element Msg
 drawPgnInput model =
     let
-        (parsingStatusText, statusColor) =
+        ( parsingStatusText, statusColor ) =
             case model.pgnParsingError of
                 Nothing ->
-                    ("Valid :)", Element.rgb255 0 200 0)
+                    ( "Valid :)", Element.rgb255 0 200 0 )
+
                 Just error ->
-                    (error, Element.rgb255 200 0 0)
+                    ( error, Element.rgb255 200 0 0 )
     in
     Element.column []
         [ Element.Input.multiline

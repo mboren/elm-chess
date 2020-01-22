@@ -53,8 +53,10 @@ isPlyValid ply position =
     in
     if EverySet.member ply possiblePlies then
         Ok ()
+
     else if EverySet.member ply (getPossibleMovesForCurrentPlayerIgnoringCheck position startSquare) then
         Err ("Moving from " ++ Square.toString (Ply.getStart ply) ++ " would result in check!")
+
     else
         Err "Illegal ply"
 
@@ -507,9 +509,11 @@ getPossibleMovesForCurrentPlayerWithoutCheck position square =
     getPossibleMoves True position.playerToMove position square
         |> EverySet.filter (not << wouldMoveLeavePlayerInCheck position.playerToMove position)
 
+
 getPossibleMovesForCurrentPlayerIgnoringCheck : Position -> Square -> EverySet Ply
 getPossibleMovesForCurrentPlayerIgnoringCheck position square =
     getPossibleMoves True position.playerToMove position square
+
 
 getPossibleMoves : Bool -> Player -> Position -> Square -> EverySet Ply
 getPossibleMoves includeCastling player position square =
@@ -928,12 +932,14 @@ applyPgnPly p position =
                     case isPlyValid ply pos of
                         Ok _ ->
                             makeMove pos ply |> Result.fromMaybe "Failed to make move!"
+
                         Err err ->
                             let
                                 _ =
                                     Debug.log "Invalid ply: " ply
                             in
                             Err err
+
 
 fromPgn : String -> Result String Position
 fromPgn text =
