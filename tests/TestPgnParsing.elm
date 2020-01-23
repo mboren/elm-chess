@@ -166,6 +166,9 @@ suite =
                 , test "move number followed by garbage" <|
                     \_ ->
                         Expect.err (Parser.run Pgn.moves "1. jjjjjj")
+                , test "Just move number" <|
+                    \_ ->
+                        Expect.err (Parser.run Pgn.moves "1.")
                 , test "garbage" <|
                     \_ ->
                         Expect.err (Parser.run Pgn.moves "jjjjjj")
