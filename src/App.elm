@@ -116,9 +116,9 @@ update msg model =
             case Position.fromPgn text of
                 Ok newPosition ->
                     { model | pgnInput = text, pgnParsingError = Nothing, position = newPosition }
-                Err error ->
-                    { model | pgnInput = text, pgnParsingError = Just error}
 
+                Err error ->
+                    { model | pgnInput = text, pgnParsingError = Just error }
 
         DebugLogPosition ->
             let
@@ -172,8 +172,8 @@ drawPgnInput model =
             , label = Element.Input.labelAbove [] (Element.text "Enter a new position in PGN")
             , spellcheck = False
             }
-          , Element.el [Font.color statusColor] (Element.text parsingStatusText)
-         ]
+        , Element.el [ Font.color statusColor ] (Element.text parsingStatusText)
+        ]
 
 
 drawTakenPieces : List Piece -> Element Msg
@@ -395,5 +395,21 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
                 Element.none
 
             Just p ->
-                Element.text (Piece.toString p)
+                Element.image [] { src = pieceToFileName p, description = Piece.toString p }
         )
+
+
+pieceToFileName piece =
+    let
+        color =
+            case piece.color of
+                Player.White ->
+                    "l"
+
+                Player.Black ->
+                    "d"
+
+        pieceKind =
+            String.toLower (Piece.pieceKindToString piece.kind)
+    in
+    "../images/Chess_" ++ pieceKind ++ color ++ "t45.svg"
