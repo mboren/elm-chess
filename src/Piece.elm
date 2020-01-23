@@ -22,40 +22,40 @@ fromString : String -> Maybe Piece
 fromString s =
     case s of
         "P" ->
-            Just (Piece Pawn WhitePlayer)
+            Just (Piece Pawn White)
 
         "R" ->
-            Just (Piece Rook WhitePlayer)
+            Just (Piece Rook White)
 
         "N" ->
-            Just (Piece Knight WhitePlayer)
+            Just (Piece Knight White)
 
         "B" ->
-            Just (Piece Bishop WhitePlayer)
+            Just (Piece Bishop White)
 
         "K" ->
-            Just (Piece King WhitePlayer)
+            Just (Piece King White)
 
         "Q" ->
-            Just (Piece Queen WhitePlayer)
+            Just (Piece Queen White)
 
         "p" ->
-            Just (Piece Pawn BlackPlayer)
+            Just (Piece Pawn Black)
 
         "r" ->
-            Just (Piece Rook BlackPlayer)
+            Just (Piece Rook Black)
 
         "n" ->
-            Just (Piece Knight BlackPlayer)
+            Just (Piece Knight Black)
 
         "b" ->
-            Just (Piece Bishop BlackPlayer)
+            Just (Piece Bishop Black)
 
         "k" ->
-            Just (Piece King BlackPlayer)
+            Just (Piece King Black)
 
         "q" ->
-            Just (Piece Queen BlackPlayer)
+            Just (Piece Queen Black)
 
         _ ->
             Nothing
@@ -84,7 +84,7 @@ pieceKindToString pk =
 
 toString p =
     case p.color of
-        WhitePlayer ->
+        White ->
             case p.kind of
                 Pawn ->
                     "♙"
@@ -104,7 +104,7 @@ toString p =
                 Queen ->
                     "♕"
 
-        BlackPlayer ->
+        Black ->
             case p.kind of
                 Pawn ->
                     "♟"

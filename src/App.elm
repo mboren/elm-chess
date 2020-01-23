@@ -138,9 +138,9 @@ view model =
         []
         (Element.column
             []
-            [ drawTakenPieces (History.getTakenPieces BlackPlayer model.position.history)
+            [ drawTakenPieces (History.getTakenPieces Black model.position.history)
             , drawBoard model
-            , drawTakenPieces (History.getTakenPieces WhitePlayer model.position.history)
+            , drawTakenPieces (History.getTakenPieces White model.position.history)
             , drawHistory model.position
             , drawStatus model
             , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just DebugLogPosition, label = Element.text "Log position" }
@@ -333,10 +333,10 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
 
                 Just p ->
                     case p.color of
-                        BlackPlayer ->
+                        Black ->
                             Element.rgb255 0 0 0
 
-                        WhitePlayer ->
+                        White ->
                             Element.rgb255 255 255 255
 
         moveSquares =
@@ -371,10 +371,10 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
 
                 Just p ->
                     case p.color of
-                        WhitePlayer ->
+                        White ->
                             [ Font.glow (Element.rgb 0 0 0) 1.0 ]
 
-                        BlackPlayer ->
+                        Black ->
                             []
     in
     Element.el

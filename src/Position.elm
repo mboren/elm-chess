@@ -192,10 +192,10 @@ getSquaresOccupiedByCurrentPlayer position =
 hasPawnMovedBefore : Player -> Square -> Bool
 hasPawnMovedBefore color { rank } =
     case color of
-        WhitePlayer ->
+        White ->
             rank /= 1
 
-        BlackPlayer ->
+        Black ->
             rank /= 6
 
 
@@ -705,7 +705,7 @@ getRows board =
 
 initial =
     { history = History.empty
-    , playerToMove = WhitePlayer
+    , playerToMove = White
 
     {- i'm still playing with both the Piece type definition and how i'm storing the board
        so until that settles down
@@ -1052,7 +1052,7 @@ toPgnHelp ply ( position, strings ) =
                 |> Maybe.withDefault initial
 
         moveNumber =
-            if position.playerToMove == Player.WhitePlayer then
+            if position.playerToMove == Player.White then
                 History.moveNumber nextPosition.history
                     |> String.fromInt
                     |> (\i -> i ++ ". ")

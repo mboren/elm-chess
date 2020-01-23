@@ -4,51 +4,51 @@ module Player exposing (..)
 
 
 type Player
-    = WhitePlayer
-    | BlackPlayer
+    = White
+    | Black
 
 
 direction : Player -> Int
 direction player =
     case player of
-        WhitePlayer ->
+        White ->
             1
 
-        BlackPlayer ->
+        Black ->
             -1
 
 
 otherPlayer player =
     case player of
-        WhitePlayer ->
-            BlackPlayer
+        White ->
+            Black
 
-        BlackPlayer ->
-            WhitePlayer
+        Black ->
+            White
 
 
 toString player =
     case player of
-        WhitePlayer ->
+        White ->
             "White"
 
-        BlackPlayer ->
+        Black ->
             "Black"
 
 
 lastRank player =
     case player of
-        WhitePlayer ->
+        White ->
             7
 
-        BlackPlayer ->
+        Black ->
             0
 
 
 firstRank player =
     case player of
-        WhitePlayer ->
+        White ->
             0
 
-        BlackPlayer ->
+        Black ->
             7
