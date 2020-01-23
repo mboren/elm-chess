@@ -590,69 +590,73 @@ getPossibleMoves includeCastling player position square =
 
 makeMove : Position -> Ply -> Maybe Position
 makeMove position ply =
-    let
-        newBoard =
-            case ply of
-                Ply.QueensideCastle player ->
-                    let
-                        rank =
-                            Player.firstRank player
+    if position.playerToMove /= Ply.getPlayer ply then
+        Nothing
 
-                        kingFile =
-                            2
+    else
+        let
+            newBoard =
+                case ply of
+                    Ply.QueensideCastle player ->
+                        let
+                            rank =
+                                Player.firstRank player
 
-                        rookFile =
-                            3
-                    in
-                    position.board
-                        |> Array2D.set rank kingFile (Just (Piece Piece.King player))
-                        |> Array2D.set rank rookFile (Just (Piece Piece.Rook player))
-                        |> Array2D.set rank 4 Nothing
-                        |> Array2D.set rank 0 Nothing
+                            kingFile =
+                                2
 
-                Ply.KingsideCastle player ->
-                    let
-                        rank =
-                            Player.firstRank player
+                            rookFile =
+                                3
+                        in
+                        position.board
+                            |> Array2D.set rank kingFile (Just (Piece Piece.King player))
+                            |> Array2D.set rank rookFile (Just (Piece Piece.Rook player))
+                            |> Array2D.set rank 4 Nothing
+                            |> Array2D.set rank 0 Nothing
 
-                        kingFile =
-                            6
+                    Ply.KingsideCastle player ->
+                        let
+                            rank =
+                                Player.firstRank player
 
-                        rookFile =
-                            5
-                    in
-                    position.board
-                        |> Array2D.set rank kingFile (Just (Piece Piece.King player))
-                        |> Array2D.set rank rookFile (Just (Piece Piece.Rook player))
-                        |> Array2D.set rank 4 Nothing
-                        |> Array2D.set rank 7 Nothing
+                            kingFile =
+                                6
 
-                Ply.StandardMove data ->
-                    let
-                        newPiece =
-                            case data.promotion of
-                                Nothing ->
-                                    Just data.piece
+                            rookFile =
+                                5
+                        in
+                        position.board
+                            |> Array2D.set rank kingFile (Just (Piece Piece.King player))
+                            |> Array2D.set rank rookFile (Just (Piece Piece.Rook player))
+                            |> Array2D.set rank 4 Nothing
+                            |> Array2D.set rank 7 Nothing
 
-                                Just pp ->
-                                    Just pp
-                    in
-                    position.board
-                        |> Array2D.set data.end.rank data.end.file newPiece
-                        |> Array2D.set data.start.rank data.start.file Nothing
+                    Ply.StandardMove data ->
+                        let
+                            newPiece =
+                                case data.promotion of
+                                    Nothing ->
+                                        Just data.piece
 
-                Ply.EnPassant data ->
-                    position.board
-                        |> Array2D.set data.start.rank data.start.file Nothing
-                        |> Array2D.set data.end.rank data.end.file (Just (Piece Piece.Pawn data.player))
-                        |> Array2D.set data.takenPawn.rank data.takenPawn.file Nothing
-    in
-    Just
-        { position
-            | board = newBoard
-            , history = History.add ply position.history
-            , playerToMove = Player.otherPlayer position.playerToMove
-        }
+                                    Just pp ->
+                                        Just pp
+                        in
+                        position.board
+                            |> Array2D.set data.end.rank data.end.file newPiece
+                            |> Array2D.set data.start.rank data.start.file Nothing
+
+                    Ply.EnPassant data ->
+                        position.board
+                            |> Array2D.set data.start.rank data.start.file Nothing
+                            |> Array2D.set data.end.rank data.end.file (Just (Piece Piece.Pawn data.player))
+                            |> Array2D.set data.takenPawn.rank data.takenPawn.file Nothing
+        in
+        Just
+            { position
+                | board = newBoard
+                , history = History.add ply position.history
+                , playerToMove = Player.otherPlayer position.playerToMove
+            }
 
 
 getSquaresOccupiedByPlayer : Player -> Position -> EverySet Square

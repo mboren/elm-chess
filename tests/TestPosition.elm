@@ -143,4 +143,12 @@ suite =
                     in
                     Expect.ok (Position.isPlyValid (Ply.KingsideCastle Player.BlackPlayer) positionBeforeCastling)
             ]
+        , describe "makeMove"
+            [ test "ply with wrong turn should return Nothing" <|
+                \_ ->
+                    Expect.equal Nothing (Position.makeMove Position.initial (Ply.StandardMove { start = Square 6 0, end = Square 5 0, player = Player.BlackPlayer, piece = Piece Piece.Pawn Player.BlackPlayer, takes = Nothing, promotion = Nothing }))
+            , test "illegal ply by current player should be allowed" <|
+                \_ ->
+                    Expect.equal Nothing (Position.makeMove Position.initial (Ply.StandardMove { start = Square 6 0, end = Square 5 0, player = Player.BlackPlayer, piece = Piece Piece.Pawn Player.BlackPlayer, takes = Nothing, promotion = Nothing }))
+            ]
         ]
