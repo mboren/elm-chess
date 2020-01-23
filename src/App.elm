@@ -282,7 +282,7 @@ drawBoard model =
         -- TODO foo
         foo : List (List (Element Msg))
         foo =
-            Array2D.indexedMap (squareEl (Element.px 50) currentPlayersSquares possibleMoves selectedSquare) model.position.board
+            Array2D.indexedMap (squareEl (Element.px 45) currentPlayersSquares possibleMoves selectedSquare) model.position.board
                 |> Position.getRows
 
         rows =
