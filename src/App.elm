@@ -31,6 +31,15 @@ main =
 -- MODEL
 
 
+type alias BoardRenderInfo =
+    { squareSize : Element.Length
+    , selectablePieceSquares : EverySet Square
+    , possiblePlies : EverySet Ply
+    , selectedSquare : Maybe Square
+    , lastPly : Maybe Ply
+    }
+
+
 type GameStatus
     = SelectingPiece
     | SelectingMove Square (EverySet Ply)
@@ -279,28 +288,45 @@ drawBoard model =
                 Just sq ->
                     Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position sq
 
-        -- TODO foo
-        foo : List (List (Element Msg))
-        foo =
-            Array2D.indexedMap (squareEl (Element.px 45) currentPlayersSquares possibleMoves selectedSquare) model.position.board
-                |> Position.getRows
-
-        rows =
-            List.map (Element.row []) foo
+        renderInfo =
+            { squareSize = Element.px 45
+            , selectablePieceSquares = currentPlayersSquares
+            , possiblePlies = possibleMoves
+            , selectedSquare = selectedSquare
+            , lastPly = History.getLastPly model.position.history
+            }
     in
     Element.column
         [ Element.width Element.fill ]
-        rows
+        (Array2D.indexedMap (squareEl renderInfo) model.position.board
+            |> Position.getRows
+            |> List.map (Element.row [])
+        )
 
 
-squareColor : Maybe Square -> Square -> Element.Color
-squareColor selectedSquare currentSquare =
+squareColor : BoardRenderInfo -> Square -> Element.Color
+squareColor { selectedSquare, lastPly } currentSquare =
     let
-        unselectedColors =
+        normalColors =
             ( Element.rgb255 237 238 210, Element.rgb255 0 150 53 )
 
         selectedColors =
             ( Element.rgb255 255 241 0, Element.rgb255 255 241 0 )
+
+        lastPlyColors =
+            ( Element.rgb255 233 255 92, Element.rgb255 120 223 51 )
+
+        unselectedColors =
+            case lastPly of
+                Nothing ->
+                    normalColors
+
+                Just lp ->
+                    if Ply.getStart lp == currentSquare || Ply.getEnd lp == currentSquare then
+                        lastPlyColors
+
+                    else
+                        normalColors
 
         ( whiteSquareColor, blackSquareColor ) =
             case selectedSquare of
@@ -308,7 +334,7 @@ squareColor selectedSquare currentSquare =
                     unselectedColors
 
                 Just sq ->
-                    if sq.rank == currentSquare.rank && sq.file == currentSquare.file then
+                    if sq == currentSquare then
                         selectedColors
 
                     else
@@ -323,18 +349,35 @@ squareColor selectedSquare currentSquare =
         whiteSquareColor
 
 
-squareEl : Element.Length -> EverySet Square -> EverySet Ply -> Maybe Square -> Rank -> File -> Maybe Piece -> Element Msg
-squareEl size selectablePieceSquares possibleMoves selectedSquare rank file maybePiece =
+drawPiece : Maybe Piece -> Element Msg
+drawPiece maybePiece =
+    case maybePiece of
+        Nothing ->
+            Element.none
+
+        Just p ->
+            Element.image [] { src = pieceToFileName p, description = Piece.toString p }
+
+
+possibleMoveOverlay =
+    Element.el [ Element.Border.rounded 50, Background.color (Element.rgb255 255 0 0), Element.width Element.fill, Element.height Element.fill, Element.alpha 0.5 ] Element.none
+
+
+squareEl : BoardRenderInfo -> Rank -> File -> Maybe Piece -> Element Msg
+squareEl renderInfo rank file maybePiece =
     let
+        currentSquare =
+            Square rank file
+
         moveSquares =
-            EverySet.map Ply.toSquareForMoveSelection possibleMoves
+            EverySet.map Ply.toSquareForMoveSelection renderInfo.possiblePlies
 
         squareClickEvent =
-            if EverySet.member (Square rank file) selectablePieceSquares then
-                [ Element.Events.onClick (SelectPiece (Square rank file)) ]
+            if EverySet.member currentSquare renderInfo.selectablePieceSquares then
+                [ Element.Events.onClick (SelectPiece currentSquare) ]
 
-            else if EverySet.member (Square rank file) moveSquares then
-                case Ply.getMoveAssociatedWithSquare (EverySet.toList possibleMoves) (Square rank file) of
+            else if EverySet.member currentSquare moveSquares then
+                case Ply.getMoveAssociatedWithSquare (EverySet.toList renderInfo.possiblePlies) currentSquare of
                     Nothing ->
                         []
 
@@ -345,28 +388,25 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
                 []
 
         overlay =
-            if EverySet.member (Square rank file) moveSquares then
-                Element.el [ Element.Border.rounded 50, Background.color (Element.rgb255 255 0 0), Element.width Element.fill, Element.height Element.fill, Element.alpha 0.5 ] Element.none
+            if EverySet.member currentSquare moveSquares then
+                possibleMoveOverlay
 
             else
                 Element.none
+
+        backgroundColor =
+            squareColor renderInfo currentSquare
     in
     Element.el
-        ([ Background.color (squareColor selectedSquare (Square rank file))
+        ([ Background.color backgroundColor
          , Element.padding 0
-         , Element.width size
-         , Element.height size
+         , Element.width renderInfo.squareSize
+         , Element.height renderInfo.squareSize
          , Element.inFront overlay
          ]
             ++ squareClickEvent
         )
-        (case maybePiece of
-            Nothing ->
-                Element.none
-
-            Just p ->
-                Element.image [] { src = pieceToFileName p, description = Piece.toString p }
-        )
+        (drawPiece maybePiece)
 
 
 pieceToFileName piece =
