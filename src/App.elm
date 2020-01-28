@@ -1,7 +1,7 @@
 module App exposing (..)
 
 import Array2D exposing (Array2D)
-import Browser
+import Browser exposing (Document)
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Border
@@ -24,7 +24,12 @@ import Square exposing (File, Rank, Square)
 
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.document
+        { init = \_ -> ( init, Cmd.none )
+        , update = update
+        , view = view
+        , subscriptions = \_ -> Sub.none
+        }
 
 
 
@@ -75,11 +80,11 @@ type Msg
     | UpdatePgnInput String
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SelectPiece square ->
-            { model | status = SelectingMove square (Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position square) }
+            ( { model | status = SelectingMove square (Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position square) }, Cmd.none )
 
         AiMove ->
             case model.status of
@@ -95,70 +100,78 @@ update msg model =
                             else
                                 SelectingPiece
                     in
-                    { model | position = newPosition, status = status }
+                    ( { model | position = newPosition, status = status }, Cmd.none )
 
                 _ ->
-                    model
+                    ( model, Cmd.none )
 
         MoveTo ply ->
-            case model.status of
-                SelectingMove start _ ->
-                    let
-                        newPosition =
-                            Position.makeMove model.position ply
-                    in
-                    case newPosition of
-                        Nothing ->
+            let
+                newModel =
+                    case model.status of
+                        SelectingMove start _ ->
+                            let
+                                newPosition =
+                                    Position.makeMove model.position ply
+                            in
+                            case newPosition of
+                                Nothing ->
+                                    model
+
+                                Just pos ->
+                                    if Position.isCurrentPlayerInCheckMate pos then
+                                        { model | position = pos, status = Checkmate }
+
+                                    else
+                                        { model | position = pos, status = SelectingPiece }
+
+                        _ ->
                             model
-
-                        Just pos ->
-                            if Position.isCurrentPlayerInCheckMate pos then
-                                { model | position = pos, status = Checkmate }
-
-                            else
-                                { model | position = pos, status = SelectingPiece }
-
-                _ ->
-                    model
+            in
+            ( newModel, Cmd.none )
 
         UpdatePgnInput text ->
             case Position.fromPgn text of
                 Ok newPosition ->
-                    { model | pgnInput = text, pgnParsingError = Nothing, position = newPosition }
+                    ( { model | pgnInput = text, pgnParsingError = Nothing, position = newPosition }, Cmd.none )
 
                 Err error ->
-                    { model | pgnInput = text, pgnParsingError = Just error }
+                    ( { model | pgnInput = text, pgnParsingError = Just error }, Cmd.none )
 
         DebugLogPosition ->
             let
                 _ =
                     Debug.log "" model.position
             in
-            model
+            ( model, Cmd.none )
 
 
 
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
-    Element.layout
-        []
-        (Element.column
+    { title = "chess"
+    , body =
+        [ Element.layout
             []
-            [ drawTakenPieces (History.getTakenPieces Black model.position.history)
-            , drawBoard model
-            , drawTakenPieces (History.getTakenPieces White model.position.history)
-            , drawHistory model.position
-            , drawStatus model
-            , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just DebugLogPosition, label = Element.text "Log position" }
-            , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just AiMove, label = Element.text "ai move" }
-            , drawDebugInfo model
-            , drawPgnParsingAutoTestResults model.position
-            , drawPgnInput model
-            ]
-        )
+            (Element.column
+                []
+                [ drawTakenPieces (History.getTakenPieces Black model.position.history)
+                , drawBoard model
+                , drawTakenPieces (History.getTakenPieces White model.position.history)
+                , drawHistory model.position
+                , drawStatus model
+                , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just DebugLogPosition, label = Element.text "Log position" }
+                , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just AiMove, label = Element.text "ai move" }
+                , drawDebugInfo model
+                , drawPgnParsingAutoTestResults model.position
+                , drawPgnInput model
+                ]
+            )
+        ]
+    }
 
 
 drawPgnInput : Model -> Element Msg
