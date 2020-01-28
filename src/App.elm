@@ -326,19 +326,6 @@ squareColor selectedSquare currentSquare =
 squareEl : Element.Length -> EverySet Square -> EverySet Ply -> Maybe Square -> Rank -> File -> Maybe Piece -> Element Msg
 squareEl size selectablePieceSquares possibleMoves selectedSquare rank file maybePiece =
     let
-        mainFontColor =
-            case maybePiece of
-                Nothing ->
-                    Element.rgb255 255 0 0
-
-                Just p ->
-                    case p.color of
-                        Black ->
-                            Element.rgb255 0 0 0
-
-                        White ->
-                            Element.rgb255 255 255 255
-
         moveSquares =
             EverySet.map Ply.toSquareForMoveSelection possibleMoves
 
@@ -363,32 +350,15 @@ squareEl size selectablePieceSquares possibleMoves selectedSquare rank file mayb
 
             else
                 Element.none
-
-        glow =
-            case maybePiece of
-                Nothing ->
-                    []
-
-                Just p ->
-                    case p.color of
-                        White ->
-                            [ Font.glow (Element.rgb 0 0 0) 1.0 ]
-
-                        Black ->
-                            []
     in
     Element.el
         ([ Background.color (squareColor selectedSquare (Square rank file))
-         , Font.color mainFontColor
-         , Font.size 50
-         , Font.center
          , Element.padding 0
          , Element.width size
          , Element.height size
          , Element.inFront overlay
          ]
             ++ squareClickEvent
-            ++ glow
         )
         (case maybePiece of
             Nothing ->
