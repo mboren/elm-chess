@@ -342,7 +342,7 @@ squareColor { selectedSquare, lastPly } currentSquare =
     in
     -- if the evenness of the rank and file are the same, then it is black, otherwise it is white
     -- eg file A (=1), rank 8 is white, file B (=2), rank 8 is black
-    if modBy 2 (currentSquare.rank + 1) == modBy 2 (currentSquare.file + 1) then
+    if modBy 2 (currentSquare.rank) == modBy 2 (currentSquare.file) then
         blackSquareColor
 
     else
