@@ -2,6 +2,7 @@ module App exposing (..)
 
 import Array2D exposing (Array2D)
 import Browser exposing (Document)
+import Browser.Events
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Border
@@ -28,7 +29,7 @@ main =
         { init = \_ -> ( init, Cmd.none )
         , update = update
         , view = view
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
 
 
@@ -49,6 +50,32 @@ type GameStatus
     = SelectingPiece
     | SelectingMove Square (EverySet Ply)
     | Checkmate
+    | TimeWin Player
+
+
+type alias Timer =
+    { whiteTime : Float
+    , blackTime : Float
+    }
+
+
+updateTimer : Timer -> Player -> Float -> Timer
+updateTimer timer player delta =
+    case player of
+        Player.White ->
+            { timer | whiteTime = max 0 (timer.whiteTime - delta) }
+
+        Player.Black ->
+            { timer | blackTime = max 0 (timer.blackTime - delta) }
+
+
+timeRemaining timer player =
+    case player of
+        Player.White ->
+            timer.whiteTime
+
+        Player.Black ->
+            timer.blackTime
 
 
 type alias Model =
@@ -56,6 +83,7 @@ type alias Model =
     , status : GameStatus
     , pgnInput : String
     , pgnParsingError : Maybe String
+    , timer : Timer
     }
 
 
@@ -65,6 +93,7 @@ init =
     , status = SelectingPiece
     , pgnInput = ""
     , pgnParsingError = Nothing
+    , timer = { whiteTime = 5.0 * 60.0 * 1000.0, blackTime = 5.0 * 60.0 * 1000.0 }
     }
 
 
@@ -78,6 +107,7 @@ type Msg
     | AiMove
     | DebugLogPosition
     | UpdatePgnInput String
+    | Tick Float
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -138,12 +168,56 @@ update msg model =
                 Err error ->
                     ( { model | pgnInput = text, pgnParsingError = Just error }, Cmd.none )
 
+        Tick delta ->
+            let
+                newTimer =
+                    updateTimer model.timer model.position.playerToMove delta
+
+                status =
+                    if timeRemaining newTimer Player.White <= 0 then
+                        TimeWin Player.Black
+
+                    else if timeRemaining newTimer Player.Black <= 0 then
+                        TimeWin Player.White
+
+                    else
+                        model.status
+            in
+            ( { model | timer = newTimer, status = status }, Cmd.none )
+
         DebugLogPosition ->
             let
                 _ =
                     Debug.log "" model.position
             in
             ( model, Cmd.none )
+
+
+
+-- SUBSCRIPTIONS
+
+
+isGameOver status =
+    case status of
+        SelectingPiece ->
+            False
+
+        SelectingMove _ _ ->
+            False
+
+        Checkmate ->
+            True
+
+        TimeWin _ ->
+            True
+
+
+subscriptions model =
+    if isGameOver model.status then
+        Sub.none
+
+    else
+        Browser.Events.onAnimationFrameDelta Tick
 
 
 
@@ -160,6 +234,7 @@ view model =
                 []
                 [ drawTakenPieces (History.getTakenPieces Black model.position.history)
                 , drawBoard model
+                , drawTimer model.position.playerToMove model.timer
                 , drawTakenPieces (History.getTakenPieces White model.position.history)
                 , drawHistory model.position
                 , drawStatus model
@@ -172,6 +247,51 @@ view model =
             )
         ]
     }
+
+
+drawTimer : Player -> Timer -> Element Msg
+drawTimer player timer =
+    let
+        toStringWithLeadingZero num =
+            if num < 10 then
+                "0" ++ String.fromInt num
+
+            else
+                String.fromInt num
+
+        millisToString millis =
+            let
+                hour =
+                    60 * 60 * 1000
+
+                minute =
+                    60 * 1000
+
+                second =
+                    1000
+
+                hours =
+                    floor millis // hour
+
+                minutes =
+                    (floor millis - (hour * hours)) // minute
+
+                seconds =
+                    (floor millis - (hour * hours) - (minute * minutes)) // second
+            in
+            if hours > 0 then
+                [ String.fromInt hours, toStringWithLeadingZero minutes, toStringWithLeadingZero seconds ] |> String.join ":"
+
+            else if minutes > 0 then
+                [ String.fromInt minutes, toStringWithLeadingZero seconds ] |> String.join ":"
+
+            else
+                String.fromInt seconds
+    in
+    Element.row [ Element.spacing 10 ]
+        [ Element.el [ Element.Border.color (Element.rgb255 0 0 0) ] (Element.text (millisToString timer.whiteTime))
+        , Element.el [] (Element.text (millisToString timer.blackTime))
+        ]
 
 
 drawPgnInput : Model -> Element Msg
@@ -210,6 +330,9 @@ drawStatus model =
             case model.status of
                 Checkmate ->
                     (Player.toString <| Player.otherPlayer <| model.position.playerToMove) ++ " wins!"
+
+                TimeWin player ->
+                    Player.toString player ++ " wins!"
 
                 _ ->
                     (Player.toString <| model.position.playerToMove) ++ " to move"
@@ -279,6 +402,9 @@ drawBoard model =
                 Checkmate ->
                     EverySet.empty
 
+                TimeWin _ ->
+                    EverySet.empty
+
                 _ ->
                     Position.getSquaresOccupiedByCurrentPlayer model.position
 
@@ -292,6 +418,9 @@ drawBoard model =
 
                 SelectingMove square _ ->
                     Just square
+
+                TimeWin _ ->
+                    Nothing
 
         possibleMoves =
             case selectedSquare of
