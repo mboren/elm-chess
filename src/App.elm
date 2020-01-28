@@ -300,8 +300,20 @@ drawBoard model =
         [ Element.width Element.fill ]
         (Array2D.indexedMap (squareEl renderInfo) model.position.board
             |> Position.getRows
+            |> orientBoard model.position.playerToMove
             |> List.map (Element.row [])
         )
+
+
+orientBoard : Player -> List (List a) -> List (List a)
+orientBoard player board =
+    case player of
+        Player.White ->
+            board
+
+        Player.Black ->
+            List.reverse board
+                |> List.map List.reverse
 
 
 squareColor : BoardRenderInfo -> Square -> Element.Color
@@ -342,7 +354,7 @@ squareColor { selectedSquare, lastPly } currentSquare =
     in
     -- if the evenness of the rank and file are the same, then it is black, otherwise it is white
     -- eg file A (=1), rank 8 is white, file B (=2), rank 8 is black
-    if modBy 2 (currentSquare.rank) == modBy 2 (currentSquare.file) then
+    if modBy 2 currentSquare.rank == modBy 2 currentSquare.file then
         blackSquareColor
 
     else
