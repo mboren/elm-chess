@@ -731,7 +731,7 @@ canPieceMoveBetweenSquares : Position -> Square -> Square -> Bool
 canPieceMoveBetweenSquares position start end =
     getPossibleMovesForCurrentPlayerWithoutCheck position start
         |> EverySet.toList
-        |> List.filterMap Ply.getEnd
+        |> List.map Ply.getEnd
         |> List.member end
 
 
@@ -1144,7 +1144,7 @@ plyScore position ply =
                                                 0
 
                                             Just p ->
-                                                if Ply.getEnd p == Just (Ply.getStart ply) then
+                                                if Ply.getEnd p == Ply.getStart ply then
                                                     -3
 
                                                 else
@@ -1221,7 +1221,7 @@ plyScore position ply =
 
 getSquareThreat position square =
     generateAllMovesForCurrentPlayerWithoutCheck position
-        |> EverySet.filter (\p -> Ply.getEnd p == Just square)
+        |> EverySet.filter (\p -> Ply.toThreat p == Just square)
         |> EverySet.size
 
 
@@ -1229,7 +1229,7 @@ totalThreatValue position =
     let
         otherPlayerAttacks =
             generateAllMovesForCurrentPlayerWithoutCheck position
-                |> EverySet.map Ply.getEnd
+                |> EverySet.map Ply.toThreat
                 |> EverySet.toList
                 |> List.filterMap identity
                 |> List.filterMap (get position)
@@ -1239,7 +1239,7 @@ totalThreatValue position =
 
         currentPlayerAttacks =
             generateAllMovesForCurrentPlayerWithoutCheck { position | playerToMove = Player.otherPlayer position.playerToMove }
-                |> EverySet.map Ply.getEnd
+                |> EverySet.map Ply.toThreat
                 |> EverySet.toList
                 |> List.filterMap identity
                 |> List.filterMap (get position)

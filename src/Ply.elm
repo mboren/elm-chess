@@ -99,20 +99,20 @@ getStart ply =
             { rank = Player.firstRank player, file = 4 }
 
 
-getEnd : Ply -> Maybe Square
+getEnd : Ply -> Square
 getEnd ply =
     case ply of
         StandardMove data ->
-            Just data.end
+            data.end
 
         EnPassant data ->
-            Just data.end
+            data.end
 
         QueensideCastle player ->
-            Nothing
+            { rank = Player.firstRank player, file = 2 }
 
         KingsideCastle player ->
-            Nothing
+            { rank = Player.firstRank player, file = 6 }
 
 
 getPieceKind : Ply -> Piece.PieceKind

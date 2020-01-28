@@ -81,7 +81,7 @@ hasCaptureHappenedOnSquare : Square -> History -> Bool
 hasCaptureHappenedOnSquare square history =
     toList history
         |> List.filter (\p->(Ply.getTakenPiece p) /= Nothing)
-        |> List.filterMap Ply.getEnd
+        |> List.map Ply.getEnd
         |> List.any ((==) square)
 
 
@@ -95,7 +95,6 @@ hasQueensideRookMoved player history =
         |> List.filter (\ply -> startingSquare == Ply.getStart ply)
         |> List.isEmpty
         |> not
-
 
 hasKingsideRookMoved : Player -> History -> Bool
 hasKingsideRookMoved player history =
