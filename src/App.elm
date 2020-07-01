@@ -11,7 +11,6 @@ import Element.Font as Font
 import Element.Input
 import EverySet exposing (EverySet)
 import History
-import Html exposing (Html)
 import Piece exposing (Piece, PieceKind(..))
 import Player exposing (Player(..))
 import Ply exposing (Ply(..))
