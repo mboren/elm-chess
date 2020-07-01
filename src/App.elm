@@ -52,7 +52,11 @@ type GameStatus
     | TimeWin Player
 
 
-type TimeControl = None | Static | Increment Float
+type TimeControl
+    = None
+    | Static
+    | Increment Float
+
 
 type alias Timer =
     { whiteTime : Float
@@ -78,11 +82,13 @@ timeRemaining timer player =
         Player.Black ->
             timer.blackTime
 
+
 handleIncrement : Model -> Model
 handleIncrement model =
     case model.timeControl of
         Increment inc ->
-            { model | timer = updateTimer model.timer (Player.otherPlayer model.position.playerToMove) (-1 * inc)}
+            { model | timer = updateTimer model.timer (Player.otherPlayer model.position.playerToMove) (-1 * inc) }
+
         _ ->
             model
 
@@ -264,48 +270,49 @@ drawTimer : Model -> Element Msg
 drawTimer model =
     if model.timeControl == None then
         Element.none
+
     else
-    let
-        toStringWithLeadingZero num =
-            if num < 10 then
-                "0" ++ String.fromInt num
+        let
+            toStringWithLeadingZero num =
+                if num < 10 then
+                    "0" ++ String.fromInt num
 
-            else
-                String.fromInt num
+                else
+                    String.fromInt num
 
-        millisToString millis =
-            let
-                hour =
-                    60 * 60 * 1000
+            millisToString millis =
+                let
+                    hour =
+                        60 * 60 * 1000
 
-                minute =
-                    60 * 1000
+                    minute =
+                        60 * 1000
 
-                second =
-                    1000
+                    second =
+                        1000
 
-                hours =
-                    floor millis // hour
+                    hours =
+                        floor millis // hour
 
-                minutes =
-                    (floor millis - (hour * hours)) // minute
+                    minutes =
+                        (floor millis - (hour * hours)) // minute
 
-                seconds =
-                    (floor millis - (hour * hours) - (minute * minutes)) // second
-            in
-            if hours > 0 then
-                [ String.fromInt hours, toStringWithLeadingZero minutes, toStringWithLeadingZero seconds ] |> String.join ":"
+                    seconds =
+                        (floor millis - (hour * hours) - (minute * minutes)) // second
+                in
+                if hours > 0 then
+                    [ String.fromInt hours, toStringWithLeadingZero minutes, toStringWithLeadingZero seconds ] |> String.join ":"
 
-            else if minutes > 0 then
-                [ String.fromInt minutes, toStringWithLeadingZero seconds ] |> String.join ":"
+                else if minutes > 0 then
+                    [ String.fromInt minutes, toStringWithLeadingZero seconds ] |> String.join ":"
 
-            else
-                String.fromInt seconds
-    in
-    Element.row [ Element.spacing 10 ]
-        [ Element.el [ Element.Border.color (Element.rgb255 0 0 0) ] (Element.text (millisToString model.timer.whiteTime))
-        , Element.el [] (Element.text (millisToString model.timer.blackTime))
-        ]
+                else
+                    String.fromInt seconds
+        in
+        Element.row [ Element.spacing 10 ]
+            [ Element.el [ Element.Border.color (Element.rgb255 0 0 0) ] (Element.text (millisToString model.timer.whiteTime))
+            , Element.el [] (Element.text (millisToString model.timer.blackTime))
+            ]
 
 
 drawPgnInput : Model -> Element Msg
@@ -422,19 +429,19 @@ drawBoard model =
                 _ ->
                     Position.getSquaresOccupiedByCurrentPlayer model.position
 
-        (selectedSquare, possibleMoves) =
+        ( selectedSquare, possibleMoves ) =
             case model.status of
                 SelectingPiece ->
-                    (Nothing, EverySet.empty)
+                    ( Nothing, EverySet.empty )
 
                 Checkmate ->
-                    (Nothing, EverySet.empty)
+                    ( Nothing, EverySet.empty )
 
                 SelectingMove square plies ->
-                    (Just square, plies)
+                    ( Just square, plies )
 
                 TimeWin _ ->
-                    (Nothing, EverySet.empty)
+                    ( Nothing, EverySet.empty )
 
         renderInfo =
             { squareSize = Element.px 45
