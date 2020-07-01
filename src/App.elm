@@ -100,6 +100,7 @@ type alias Model =
     , pgnParsingError : Maybe String
     , timer : Timer
     , timeControl : TimeControl
+    , helpTextVisible : Bool
     }
 
 
@@ -111,6 +112,7 @@ init =
     , pgnParsingError = Nothing
     , timer = { whiteTime = 5.0 * 60.0 * 1000.0, blackTime = 5.0 * 60.0 * 1000.0 }
     , timeControl = None
+    , helpTextVisible = True
     }
 
 
@@ -125,6 +127,7 @@ type Msg
     | DebugLogPosition
     | UpdatePgnInput String
     | Tick Float
+    | ToggleHelpText
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -202,6 +205,9 @@ update msg model =
             in
             ( { model | timer = newTimer, status = status }, Cmd.none )
 
+        ToggleHelpText ->
+            ( { model | helpTextVisible = not model.helpTextVisible }, Cmd.none )
+
         DebugLogPosition ->
             let
                 _ =
@@ -249,7 +255,8 @@ view model =
             []
             (Element.column
                 []
-                [ drawTakenPieces (History.getTakenPieces Black model.position.history)
+                [ drawHelpText model
+                , drawTakenPieces (History.getTakenPieces Black model.position.history)
                 , drawBoard model
                 , drawTimer model
                 , drawTakenPieces (History.getTakenPieces White model.position.history)
@@ -590,3 +597,35 @@ pieceToFileName piece =
             String.toLower (Piece.pieceKindToString piece.kind)
     in
     "../images/Chess_" ++ pieceKind ++ color ++ "t45.svg"
+
+
+drawButton msg text =
+    Element.Input.button
+        [ Background.color (Element.rgb255 128 128 128)
+        , Element.Border.rounded 10
+        , Element.Border.width 10
+        , Element.Border.color (Element.rgb255 128 128 128)
+        ]
+        { onPress = Just msg, label = Element.text text }
+
+
+drawHelpText model =
+    if model.helpTextVisible then
+        Element.column
+            [ Element.width (Element.fill |> Element.maximum 500), Element.padding 5 ]
+            [ drawButton ToggleHelpText "Hide help"
+            , Element.textColumn [ Element.spacing 10, Element.padding 5, Element.Border.width 1 ]
+                [ Element.paragraph [] [ Element.text "This is a basic hotseat multiplayer chess game." ]
+                , Element.paragraph [] [ Element.text "The main goal of this project was to see what writing the logic for chess was like in the Elm programming language, so the UI is pretty rough." ]
+                , Element.paragraph [] [ Element.text "Click a piece to see where it can move, then click on one of the red circles that appear to move it." ]
+                , Element.paragraph [] [ Element.text "The board will flip around after every move." ]
+                , Element.paragraph [] [ Element.text "To have the computer make a move for you, press the \"ai move\" button." ]
+                , Element.paragraph [] [ Element.text "You can also enter a chess position by pasting the PGN movetext in the text box at the bottom. (comments are not supported)" ]
+                ]
+            ]
+
+    else
+        Element.column
+            []
+            [ drawButton ToggleHelpText "Show help"
+            ]
