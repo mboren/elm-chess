@@ -271,8 +271,6 @@ view model =
                 , drawStatus model
                 , drawButton DebugLogPosition "Log position"
                 , drawButton AiMove "ai move"
-                , drawDebugInfo model
-                , drawPgnParsingAutoTestResults model.position
                 , drawPgnInput model
                 ]
             )
@@ -383,53 +381,6 @@ drawHistory position =
     Element.text (Position.toPgn position)
 
 
-drawPgnParsingAutoTestResults : Position -> Element Msg
-drawPgnParsingAutoTestResults position =
-    let
-        pgnText =
-            Position.toPgn position
-
-        pgnParsingResult =
-            Position.fromPgn pgnText
-
-        resultText =
-            case pgnParsingResult of
-                Ok pos ->
-                    if pos == position then
-                        "Ok"
-
-                    else
-                        let
-                            parsedPosition =
-                                Debug.log "Parsed position" pos
-
-                            currentPosition =
-                                Debug.log "Actual position" position
-                        in
-                        "Parsed position does not match current position! See console for details."
-
-                Err err ->
-                    err
-    in
-    Element.text resultText
-
-
-drawDebugInfo : Model -> Element Msg
-drawDebugInfo model =
-    let
-        boolToString b =
-            if b then
-                "T"
-
-            else
-                "F"
-    in
-    {- this function is used for misc stuff i want to see while developing -}
-    -- (label string, bool expression)
-    []
-        |> List.map (\( text, flag ) -> text ++ ": " ++ boolToString flag)
-        |> List.map Element.text
-        |> Element.column []
 
 
 drawBoard : Model -> Element Msg
