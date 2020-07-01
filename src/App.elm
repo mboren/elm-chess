@@ -53,6 +53,8 @@ type GameStatus
     | TimeWin Player
 
 
+type TimeControl = None | Static | Increment Float
+
 type alias Timer =
     { whiteTime : Float
     , blackTime : Float
@@ -77,6 +79,14 @@ timeRemaining timer player =
         Player.Black ->
             timer.blackTime
 
+handleIncrement : Model -> Model
+handleIncrement model =
+    case model.timeControl of
+        Increment inc ->
+            { model | timer = updateTimer model.timer (Player.otherPlayer model.position.playerToMove) (-1 * inc)}
+        _ ->
+            model
+
 
 type alias Model =
     { position : Position
@@ -84,6 +94,7 @@ type alias Model =
     , pgnInput : String
     , pgnParsingError : Maybe String
     , timer : Timer
+    , timeControl : TimeControl
     }
 
 
@@ -94,6 +105,7 @@ init =
     , pgnInput = ""
     , pgnParsingError = Nothing
     , timer = { whiteTime = 5.0 * 60.0 * 1000.0, blackTime = 5.0 * 60.0 * 1000.0 }
+    , timeControl = None
     }
 
 
@@ -130,7 +142,7 @@ update msg model =
                             else
                                 SelectingPiece
                     in
-                    ( { model | position = newPosition, status = status }, Cmd.none )
+                    ( handleIncrement { model | position = newPosition, status = status }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -150,10 +162,10 @@ update msg model =
 
                                 Just pos ->
                                     if Position.isCurrentPlayerInCheckMate pos then
-                                        { model | position = pos, status = Checkmate }
+                                        handleIncrement { model | position = pos, status = Checkmate }
 
                                     else
-                                        { model | position = pos, status = SelectingPiece }
+                                        handleIncrement { model | position = pos, status = SelectingPiece }
 
                         _ ->
                             model
@@ -213,7 +225,7 @@ isGameOver status =
 
 
 subscriptions model =
-    if isGameOver model.status then
+    if isGameOver model.status || model.timeControl == None then
         Sub.none
 
     else
@@ -234,7 +246,7 @@ view model =
                 []
                 [ drawTakenPieces (History.getTakenPieces Black model.position.history)
                 , drawBoard model
-                , drawTimer model.position.playerToMove model.timer
+                , drawTimer model
                 , drawTakenPieces (History.getTakenPieces White model.position.history)
                 , drawHistory model.position
                 , drawStatus model
@@ -249,8 +261,11 @@ view model =
     }
 
 
-drawTimer : Player -> Timer -> Element Msg
-drawTimer player timer =
+drawTimer : Model -> Element Msg
+drawTimer model =
+    if model.timeControl == None then
+        Element.none
+    else
     let
         toStringWithLeadingZero num =
             if num < 10 then
@@ -289,8 +304,8 @@ drawTimer player timer =
                 String.fromInt seconds
     in
     Element.row [ Element.spacing 10 ]
-        [ Element.el [ Element.Border.color (Element.rgb255 0 0 0) ] (Element.text (millisToString timer.whiteTime))
-        , Element.el [] (Element.text (millisToString timer.blackTime))
+        [ Element.el [ Element.Border.color (Element.rgb255 0 0 0) ] (Element.text (millisToString model.timer.whiteTime))
+        , Element.el [] (Element.text (millisToString model.timer.blackTime))
         ]
 
 
