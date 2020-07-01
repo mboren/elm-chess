@@ -269,8 +269,8 @@ view model =
                 , drawTakenPieces (History.getTakenPieces White model.position.history)
                 , drawHistory model.position
                 , drawStatus model
-                , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just DebugLogPosition, label = Element.text "Log position" }
-                , Element.Input.button [ Background.color (Element.rgb255 128 128 128), Element.Border.rounded 10, Element.Border.width 10, Element.Border.color (Element.rgb255 128 128 128) ] { onPress = Just AiMove, label = Element.text "ai move" }
+                , drawButton DebugLogPosition "Log position"
+                , drawButton AiMove "ai move"
                 , drawDebugInfo model
                 , drawPgnParsingAutoTestResults model.position
                 , drawPgnInput model
