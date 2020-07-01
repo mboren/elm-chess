@@ -452,6 +452,12 @@ isCurrentPlayerInCheckMate position =
         == generateAllMovesForCurrentPlayerWithoutCheck position
 
 
+isStalemate : Position -> Bool
+isStalemate position =
+    not (isPlayerInCheck position.playerToMove position)
+        && (EverySet.empty == generateAllMovesForCurrentPlayerWithoutCheck position)
+
+
 generateAllPossibleNextPositions : Position -> List Position
 generateAllPossibleNextPositions position =
     {- this was fun to write but is hard to read and idk if i actually need it -}

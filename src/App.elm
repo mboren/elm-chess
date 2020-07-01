@@ -49,6 +49,7 @@ type GameStatus
     = SelectingPiece
     | SelectingMove Square (EverySet Ply)
     | Checkmate
+    | Draw
     | TimeWin Player
 
 
@@ -146,6 +147,8 @@ update msg model =
                         status =
                             if Position.isCurrentPlayerInCheckMate newPosition then
                                 Checkmate
+                            else if Position.isStalemate newPosition then
+                                Draw
 
                             else
                                 SelectingPiece
@@ -170,8 +173,9 @@ update msg model =
 
                                 Just pos ->
                                     if Position.isCurrentPlayerInCheckMate pos then
-                                        handleIncrement { model | position = pos, status = Checkmate }
-
+                                        { model | position = pos, status = Checkmate }
+                                    else if Position.isStalemate pos then
+                                        { model | position = pos, status = Draw }
                                     else
                                         handleIncrement { model | position = pos, status = SelectingPiece }
 
@@ -229,6 +233,9 @@ isGameOver status =
             False
 
         Checkmate ->
+            True
+
+        Draw ->
             True
 
         TimeWin _ ->
@@ -362,6 +369,9 @@ drawStatus model =
                 TimeWin player ->
                     Player.toString player ++ " wins!"
 
+                Draw ->
+                    "Stalemate"
+
                 _ ->
                     (Player.toString <| model.position.playerToMove) ++ " to move"
     in
@@ -430,6 +440,9 @@ drawBoard model =
                 Checkmate ->
                     EverySet.empty
 
+                Draw ->
+                    EverySet.empty
+
                 TimeWin _ ->
                     EverySet.empty
 
@@ -442,6 +455,9 @@ drawBoard model =
                     ( Nothing, EverySet.empty )
 
                 Checkmate ->
+                    ( Nothing, EverySet.empty )
+
+                Draw ->
                     ( Nothing, EverySet.empty )
 
                 SelectingMove square plies ->
