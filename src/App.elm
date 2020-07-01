@@ -408,27 +408,19 @@ drawBoard model =
                 _ ->
                     Position.getSquaresOccupiedByCurrentPlayer model.position
 
-        selectedSquare =
+        (selectedSquare, possibleMoves) =
             case model.status of
                 SelectingPiece ->
-                    Nothing
+                    (Nothing, EverySet.empty)
 
                 Checkmate ->
-                    Nothing
+                    (Nothing, EverySet.empty)
 
-                SelectingMove square _ ->
-                    Just square
+                SelectingMove square plies ->
+                    (Just square, plies)
 
                 TimeWin _ ->
-                    Nothing
-
-        possibleMoves =
-            case selectedSquare of
-                Nothing ->
-                    EverySet.empty
-
-                Just sq ->
-                    Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position sq
+                    (Nothing, EverySet.empty)
 
         renderInfo =
             { squareSize = Element.px 45
