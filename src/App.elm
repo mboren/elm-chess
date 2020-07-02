@@ -337,7 +337,11 @@ drawPgnInput model =
             , label = Element.Input.labelAbove [] (Element.text "Enter a new position in PGN")
             , spellcheck = False
             }
-        , Element.el [ Font.color statusColor ] (Element.text parsingStatusText)
+        , if String.length model.pgnInput > 0 then
+            Element.el [ Font.color statusColor ] (Element.text parsingStatusText)
+
+          else
+            Element.none
         ]
 
 
