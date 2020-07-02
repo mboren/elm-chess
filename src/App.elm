@@ -583,7 +583,6 @@ drawHelpText model =
             [ drawButton ToggleHelpText "Hide help"
             , Element.textColumn [ Element.spacing 10, Element.padding 5, Element.Border.width 1 ]
                 [ Element.paragraph [] [ Element.text "This is a basic hotseat multiplayer chess game." ]
-                , Element.paragraph [] [ Element.text "The main goal of this project was to see what writing the logic for chess was like in the Elm programming language, so the UI is pretty rough." ]
                 , Element.paragraph [] [ Element.text "Click a piece to see where it can move, then click on one of the red circles that appear to move it." ]
                 , Element.paragraph [] [ Element.text "The board will flip around after every move." ]
                 , Element.paragraph [] [ Element.text "To have the computer make a move for you, press the \"ai move\" button." ]
