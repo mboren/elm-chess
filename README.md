@@ -1,5 +1,8 @@
 ![chess stuff](readme-images/basic-opening.gif)
 
+The game is live [here](https://mboren.s3-us-west-1.amazonaws.com/chess/v0/index.html).
+
+
 This is a simple hotseat multiplayer chess game with a crappy heuristic-based AI.
 It mostly served as a sandbox for me to play with chess stuff, so the UI is pretty rough.
 
