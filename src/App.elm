@@ -138,25 +138,7 @@ update msg model =
             ( { model | status = SelectingMove square (Position.getPossibleMovesForCurrentPlayerWithoutCheck model.position square) }, Cmd.none )
 
         AiMove ->
-            case model.status of
-                SelectingPiece ->
-                    let
-                        newPosition =
-                            Position.aiMove model.position 0
-
-                        status =
-                            if Position.isCurrentPlayerInCheckMate newPosition then
-                                Checkmate
-                            else if Position.isStalemate newPosition then
-                                Draw
-
-                            else
-                                SelectingPiece
-                    in
-                    ( handleIncrement { model | position = newPosition, status = status }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
+            ( makeAiMove model, Cmd.none )
 
         MoveTo ply ->
             let
@@ -172,12 +154,7 @@ update msg model =
                                     model
 
                                 Just pos ->
-                                    if Position.isCurrentPlayerInCheckMate pos then
-                                        { model | position = pos, status = Checkmate }
-                                    else if Position.isStalemate pos then
-                                        { model | position = pos, status = Draw }
-                                    else
-                                        handleIncrement { model | position = pos, status = SelectingPiece }
+                                    updatePositionAndStatus model pos
 
                         _ ->
                             model
@@ -220,8 +197,26 @@ update msg model =
             ( model, Cmd.none )
 
 
+makeAiMove : Model -> Model
+makeAiMove model =
+    if not (isGameOver model.status) then
+        Position.aiMove model.position 0
+            |> updatePositionAndStatus model
 
--- SUBSCRIPTIONS
+    else
+        model
+
+
+updatePositionAndStatus : Model -> Position -> Model
+updatePositionAndStatus model newPosition =
+    if Position.isCurrentPlayerInCheckMate newPosition then
+        { model | position = newPosition, status = Checkmate }
+
+    else if Position.isStalemate newPosition then
+        { model | position = newPosition, status = Draw }
+
+    else
+        handleIncrement { model | position = newPosition, status = SelectingPiece }
 
 
 isGameOver status =
@@ -240,6 +235,10 @@ isGameOver status =
 
         TimeWin _ ->
             True
+
+
+
+-- SUBSCRIPTIONS
 
 
 subscriptions model =
@@ -379,8 +378,6 @@ drawStatus model =
 drawHistory : Position -> Element Msg
 drawHistory position =
     Element.text (Position.toPgn position)
-
-
 
 
 drawBoard : Model -> Element Msg
