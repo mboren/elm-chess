@@ -125,7 +125,6 @@ type Msg
     = SelectPiece Square
     | MoveTo Ply
     | AiMove
-    | DebugLogPosition
     | UpdatePgnInput String
     | Tick Float
     | ToggleHelpText
@@ -188,13 +187,6 @@ update msg model =
 
         ToggleHelpText ->
             ( { model | helpTextVisible = not model.helpTextVisible }, Cmd.none )
-
-        DebugLogPosition ->
-            let
-                _ =
-                    Debug.log "" model.position
-            in
-            ( model, Cmd.none )
 
 
 makeAiMove : Model -> Model
@@ -268,7 +260,6 @@ view model =
                 , drawTakenPieces (History.getTakenPieces White model.position.history)
                 , drawHistory model.position
                 , drawStatus model
-                , drawButton DebugLogPosition "Log position"
                 , drawButton AiMove "ai move"
                 , drawPgnInput model
                 ]
