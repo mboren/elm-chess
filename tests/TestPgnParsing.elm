@@ -108,7 +108,6 @@ autoTestCases =
       }
     ]
 
-
 suite : Test
 suite =
     describe "PGN parsing"
@@ -207,6 +206,40 @@ suite =
                                 ]
                         in
                         Expect.equal (Ok expectedPosition) (Parser.run Pgn.moves "1. e4 e5 2. Bb5 c6")
+
+                , test "! should be ignored" <|
+                    \_ ->
+                        let
+                            expectedPosition =
+                                [ Pgn.PawnAdvance (Square 3 4) Nothing
+                                , Pgn.PawnAdvance (Square 4 4) Nothing
+                                , Pgn.Standard { pieceKind = Piece.Bishop, startRank = Nothing, startFile = Nothing, end = Square 4 1 }
+                                , Pgn.PawnAdvance (Square 5 2) Nothing
+                                ]
+                        in
+                        Expect.equal (Ok expectedPosition) (Parser.run Pgn.moves "1. e4 e5! 2. Bb5 c6")
+                , test "? should be ignored" <|
+                    \_ ->
+                        let
+                            expectedPosition =
+                                [ Pgn.PawnAdvance (Square 3 4) Nothing
+                                , Pgn.PawnAdvance (Square 4 4) Nothing
+                                , Pgn.Standard { pieceKind = Piece.Bishop, startRank = Nothing, startFile = Nothing, end = Square 4 1 }
+                                , Pgn.PawnAdvance (Square 5 2) Nothing
+                                ]
+                        in
+                        Expect.equal (Ok expectedPosition) (Parser.run Pgn.moves "1. e4 e5 2. Bb5? c6")
+                , test "+ should be ignored" <|
+                    \_ ->
+                        let
+                            expectedPosition =
+                                [ Pgn.PawnAdvance (Square 3 4) Nothing
+                                , Pgn.PawnAdvance (Square 4 4) Nothing
+                                , Pgn.Standard { pieceKind = Piece.Bishop, startRank = Nothing, startFile = Nothing, end = Square 4 1 }
+                                , Pgn.PawnAdvance (Square 5 2) Nothing
+                                ]
+                        in
+                        Expect.equal (Ok expectedPosition) (Parser.run Pgn.moves "1. e4 e5+ 2. Bb5 c6+")
                 ]
             ]
         , describe "building blocks"

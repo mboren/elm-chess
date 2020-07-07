@@ -53,8 +53,7 @@ If I were to release this as a library, I would cache more in the model, and wri
 - There's no promotion UI, so when a pawn reaches the end of the board, I just turn it into a Queen.
   For amateur chess players like me, this is fine, but for fancier folks, it is sometimes necessary to promote to a rook, bishop or knight to avoid a draw.
 - Draws are only detected when the player is not in check and has no legal moves. All other ways to draw (threefold repetition, 50 move rule, no possible checkmate, etc) are not checked for.
-- PGN movetext parsing only supports moves and move numbers. It doesn't support additional things people use to add flavor to games
-  like adding + to indicate check, ? to indicate blunders, or ! to indicate cool moves. Also doesn't support comments.
+- PGN movetext parsing only supports moves and move numbers. It doesn't support headers or comments. You might need to sanitize the movetext a bit before pasting a game in.
 
 # AI
 I was curious to see how well a simple heuristic based AI would do. It's not great at chess, but neither am I, so I'm pretty happy with it.

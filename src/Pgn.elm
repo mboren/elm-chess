@@ -31,7 +31,11 @@ movesHelp plies =
             , succeed ()
                 |> map (\_ -> Done (List.reverse plies))
             ]
+        |. annotationChars
 
+annotationChars : Parser ()
+annotationChars =
+    chompWhile (\c->c == '+' || c == '!' || c == '?' || c == '#')
 
 ply : Parser PgnPly
 ply =
