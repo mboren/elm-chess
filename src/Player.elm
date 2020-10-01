@@ -1,7 +1,5 @@
 module Player exposing (..)
 
--- TODO this type probably belongs in some other module
-
 
 type Player
     = White
