@@ -107,25 +107,3 @@ hasKingsideRookMoved player history =
         |> List.isEmpty
         |> not
 
-
-toStrings :
-    History
-    -> List String -- TODO i dont like the name of this, how it works, or what it does
-toStrings history =
-    if history == empty then
-        []
-
-    else
-        let
-            formattedPastMoves =
-                List.map (\( w, b ) -> [ Ply.toString w, Ply.toString b ]) history.pastMoves
-        in
-        (case history.latestPly of
-            Nothing ->
-                formattedPastMoves
-
-            Just pl ->
-                [ Ply.toString pl ] :: formattedPastMoves
-        )
-            |> List.reverse
-            |> List.indexedMap (\i ss -> String.fromInt (i + 1) ++ ". " ++ String.join " " ss)
