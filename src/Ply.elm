@@ -229,13 +229,7 @@ getMoveAssociatedWithSquare plies square =
     plies
         |> List.map (\ply -> ( toSquareForMoveSelection ply, ply ))
         |> List.filter
-            (\( sq, ply ) ->
-                if sq == square then
-                    True
-
-                else
-                    False
-            )
+            (\( sq, ply ) -> sq == square )
         |> (\l ->
                 case l of
                     [] ->
