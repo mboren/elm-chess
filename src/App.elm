@@ -75,6 +75,7 @@ updateTimer timer player delta =
             { timer | blackTime = max 0 (timer.blackTime - delta) }
 
 
+timeRemaining : Timer -> Player -> Float
 timeRemaining timer player =
     case player of
         Player.White ->
@@ -233,6 +234,7 @@ isGameOver status =
 -- SUBSCRIPTIONS
 
 
+subscriptions : Model -> Sub Msg
 subscriptions model =
     if isGameOver model.status || model.timeControl == None then
         Sub.none
