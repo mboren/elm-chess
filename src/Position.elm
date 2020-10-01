@@ -146,7 +146,7 @@ canKingsideCastle position =
         let
             fakeKingMoves : List Ply
             fakeKingMoves =
-                List.map (\sq -> Ply.StandardMove { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
+                List.map (\sq -> Ply.Standard { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
 
             squaresKingWouldMoveThroughNotThreatened =
                 List.map (wouldMoveLeavePlayerInCheck position.playerToMove position) fakeKingMoves |> List.any identity |> not
@@ -179,7 +179,7 @@ canQueensideCastle position =
 
             fakeKingMoves : List Ply
             fakeKingMoves =
-                List.map (\sq -> Ply.StandardMove { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
+                List.map (\sq -> Ply.Standard { start = Square rank 4, end = sq, piece = Piece Piece.King position.playerToMove, takes = Nothing, promotion = Nothing, player = position.playerToMove }) squaresKingWillMoveThrough
 
             squaresKingWouldMoveThroughNotThreatened =
                 List.map (wouldMoveLeavePlayerInCheck position.playerToMove position) fakeKingMoves |> List.any identity |> not
@@ -283,7 +283,7 @@ getPossiblePawnMoves player square position =
                 Nothing
 
             else
-                Just (Ply.StandardMove { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = promotion })
+                Just (Ply.Standard { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = promotion })
 
         extraMove =
             -- this checks for being blocked.
@@ -304,7 +304,7 @@ getPossiblePawnMoves player square position =
                             Nothing
 
                         else
-                            Just (Ply.StandardMove { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = Nothing })
+                            Just (Ply.Standard { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = Nothing })
 
         enpassant : Maybe Ply
         enpassant =
@@ -316,7 +316,7 @@ getPossiblePawnMoves player square position =
                 |> List.filterMap (omitIfNotOccupiedByPlayer position (Player.otherPlayer position.playerToMove))
                 |> List.map
                     (\s ->
-                        Ply.StandardMove
+                        Ply.Standard
                             { player = player
                             , piece = Piece Piece.Pawn player
                             , start = square
@@ -338,7 +338,7 @@ getPossiblePawnMoves player square position =
 getEnpassantPly : Player -> Square -> Ply -> Maybe Ply
 getEnpassantPly player startSquare previousPly =
     case previousPly of
-        Ply.StandardMove data ->
+        Ply.Standard data ->
             let
                 direction =
                     Player.direction player
@@ -409,7 +409,7 @@ convertEndSquareToStandardMove position player piece start end =
         takes =
             get position end
     in
-    Ply.StandardMove { player = player, piece = piece, start = start, end = end, takes = takes, promotion = Nothing }
+    Ply.Standard { player = player, piece = piece, start = start, end = end, takes = takes, promotion = Nothing }
 
 
 getKingSquare : Player -> Position -> Maybe Square
@@ -645,7 +645,7 @@ makeMove position ply =
                             |> Array2D.set rank 4 Nothing
                             |> Array2D.set rank 7 Nothing
 
-                    Ply.StandardMove data ->
+                    Ply.Standard data ->
                         let
                             newPiece =
                                 case data.promotion of
@@ -752,7 +752,7 @@ canPieceMoveBetweenSquares position start end =
 plyToString : Position -> Ply -> String
 plyToString position ply =
     case ply of
-        Ply.StandardMove data ->
+        Ply.Standard data ->
             let
                 pieceString =
                     case data.piece.kind of
@@ -898,7 +898,7 @@ plyScore position ply =
                 Ply.EnPassant data ->
                     4
 
-                Ply.StandardMove data ->
+                Ply.Standard data ->
                     let
                         promotes =
                             case data.promotion of

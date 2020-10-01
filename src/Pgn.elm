@@ -391,7 +391,7 @@ applyPgnPly p position =
                                     Err ("can't find pawn that can move to " ++ Square.toString endSquare)
 
                                 Just startSquare ->
-                                    Ok (Ply.StandardMove { player = pos.playerToMove, piece = Piece Piece.Pawn pos.playerToMove, start = startSquare, end = endSquare, takes = Nothing, promotion = Maybe.map (\kind -> Piece kind pos.playerToMove) maybePromotion })
+                                    Ok (Ply.Standard { player = pos.playerToMove, piece = Piece Piece.Pawn pos.playerToMove, start = startSquare, end = endSquare, takes = Nothing, promotion = Maybe.map (\kind -> Piece kind pos.playerToMove) maybePromotion })
 
                         PawnCapture data ->
                             let
@@ -431,7 +431,7 @@ applyPgnPly p position =
                                                 Err ("No piece at " ++ Square.toString data.end ++ " to capture")
 
                                 Just cp ->
-                                    Ok (Ply.StandardMove { player = pos.playerToMove, piece = Piece Piece.Pawn pos.playerToMove, start = pawnSquare, end = data.end, takes = capturedPiece, promotion = Maybe.map (\kind -> Piece kind pos.playerToMove) data.promotion })
+                                    Ok (Ply.Standard { player = pos.playerToMove, piece = Piece Piece.Pawn pos.playerToMove, start = pawnSquare, end = data.end, takes = capturedPiece, promotion = Maybe.map (\kind -> Piece kind pos.playerToMove) data.promotion })
 
                         Standard data ->
                             let
@@ -450,7 +450,7 @@ applyPgnPly p position =
                                     case ( data.startRank, data.startFile ) of
                                         ( Just sr, Just sf ) ->
                                             if List.member (Square sr sf) possibleStartSquares then
-                                                Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr sf, end = data.end, takes = Nothing, promotion = Nothing })
+                                                Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = Square sr sf, end = data.end, takes = Nothing, promotion = Nothing })
 
                                             else
                                                 Err ("(r,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
@@ -465,7 +465,7 @@ applyPgnPly p position =
                                                     Err ("(r,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
 
                                                 [ h ] ->
-                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr h.file, end = data.end, takes = Nothing, promotion = Nothing })
+                                                    Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = Square sr h.file, end = data.end, takes = Nothing, promotion = Nothing })
 
                                                 h :: t ->
                                                     Err ("(r,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
@@ -480,7 +480,7 @@ applyPgnPly p position =
                                                     Err ("(_,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
 
                                                 [ h ] ->
-                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square h.rank sf, end = data.end, takes = Nothing, promotion = Nothing })
+                                                    Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = Square h.rank sf, end = data.end, takes = Nothing, promotion = Nothing })
 
                                                 h :: t ->
                                                     Err ("(_,f) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
@@ -491,7 +491,7 @@ applyPgnPly p position =
                                                     Err ("(_,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
 
                                                 [ h ] ->
-                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = h, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+                                                    Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = h, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
 
                                                 h :: t ->
                                                     Err ("(_,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
@@ -513,7 +513,7 @@ applyPgnPly p position =
                                     case ( data.startRank, data.startFile ) of
                                         ( Just sr, Just sf ) ->
                                             if List.member (Square sr sf) possibleStartSquares then
-                                                Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr sf, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+                                                Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = Square sr sf, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
 
                                             else
                                                 Err ("(r,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
@@ -528,7 +528,7 @@ applyPgnPly p position =
                                                     Err ("(r,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
 
                                                 [ h ] ->
-                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr h.file, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+                                                    Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = Square sr h.file, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
 
                                                 h :: t ->
                                                     Err ("(r,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
@@ -543,7 +543,7 @@ applyPgnPly p position =
                                                     Err ("(_,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
 
                                                 [ h ] ->
-                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square h.rank sf, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+                                                    Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = Square h.rank sf, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
 
                                                 h :: t ->
                                                     Err ("(_,f) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
@@ -554,7 +554,7 @@ applyPgnPly p position =
                                                     Err ("(_,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
 
                                                 [ h ] ->
-                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = h, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+                                                    Ok (Ply.Standard { player = player, piece = Piece data.pieceKind player, start = h, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
 
                                                 h :: t ->
                                                     Err ("(_,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)

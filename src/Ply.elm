@@ -5,7 +5,7 @@ import Player exposing (Player)
 import Square exposing (Square)
 
 
-type alias StandardMoveData =
+type alias StandardPlyData =
     { player : Player
     , piece : Piece
     , start : Square
@@ -24,7 +24,7 @@ type alias EnPassantData =
 
 
 type Ply
-    = StandardMove StandardMoveData
+    = Standard StandardPlyData
     | QueensideCastle Player
     | KingsideCastle Player
     | EnPassant EnPassantData
@@ -33,7 +33,7 @@ type Ply
 getPlayer : Ply -> Player
 getPlayer ply =
     case ply of
-        StandardMove data ->
+        Standard data ->
             data.player
 
         EnPassant data ->
@@ -49,7 +49,7 @@ getPlayer ply =
 getTakenPiece : Ply -> Maybe Piece
 getTakenPiece ply =
     case ply of
-        StandardMove data ->
+        Standard data ->
             data.takes
 
         EnPassant data ->
@@ -65,7 +65,7 @@ getTakenPiece ply =
 getPiece : Ply -> Piece
 getPiece ply =
     case ply of
-        StandardMove data ->
+        Standard data ->
             data.piece
 
         EnPassant data ->
@@ -81,7 +81,7 @@ getPiece ply =
 getStart : Ply -> Square
 getStart ply =
     case ply of
-        StandardMove data ->
+        Standard data ->
             data.start
 
         EnPassant data ->
@@ -97,7 +97,7 @@ getStart ply =
 getEnd : Ply -> Square
 getEnd ply =
     case ply of
-        StandardMove data ->
+        Standard data ->
             data.end
 
         EnPassant data ->
@@ -113,7 +113,7 @@ getEnd ply =
 toThreat : Ply -> Maybe Square
 toThreat ply =
     case ply of
-        StandardMove data ->
+        Standard data ->
             Just data.end
 
         EnPassant data ->
@@ -129,7 +129,7 @@ toThreat ply =
 toSquareForMoveSelection : Ply -> Square
 toSquareForMoveSelection ply =
     case ply of
-        StandardMove data ->
+        Standard data ->
             data.end
 
         EnPassant data ->
