@@ -458,17 +458,6 @@ isStalemate position =
         && (EverySet.empty == generateAllMovesForCurrentPlayerWithoutCheck position)
 
 
-generateAllPossibleNextPositions : Position -> List Position
-generateAllPossibleNextPositions position =
-    {- this was fun to write but is hard to read and idk if i actually need it -}
-    getSquaresOccupiedByCurrentPlayer position
-        |> EverySet.toList
-        |> List.map (\sq -> ( sq, getPossibleMovesForCurrentPlayer position sq |> EverySet.toList ))
-        -- TODO simplify
-        |> List.map (\( start, moves ) -> List.filterMap (\ply -> makeMove position ply) moves)
-        |> List.concat
-
-
 generateAllMoves : Player -> Position -> EverySet Ply
 generateAllMoves player position =
     getSquaresOccupiedByPlayer player position
