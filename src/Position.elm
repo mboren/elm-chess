@@ -933,10 +933,6 @@ applyPgnPly p position =
                             makeMove pos ply |> Result.fromMaybe "Failed to make move!"
 
                         Err err ->
-                            let
-                                _ =
-                                    Debug.log "Invalid ply: " ply
-                            in
                             Err err
 
 
@@ -955,10 +951,6 @@ fromPgn text =
                 List.foldl applyPgnPly (Ok initial) plies
 
             Err err ->
-                let
-                    _ =
-                        Debug.log "Parsing error" err
-                in
                 Err (Pgn.parsingErrorsToString err)
 
 
