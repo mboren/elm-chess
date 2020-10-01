@@ -1,6 +1,6 @@
 module App exposing (..)
 
-import Array2D exposing (Array2D)
+import Array2D
 import Browser exposing (Document)
 import Browser.Events
 import Element exposing (Element)

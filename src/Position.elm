@@ -1,6 +1,6 @@
 module Position exposing (..)
 
-import Array exposing (Array)
+import Array
 import Array2D exposing (Array2D)
 import EverySet exposing (EverySet)
 import History exposing (History)
@@ -9,7 +9,7 @@ import Pgn
 import Piece exposing (Piece)
 import Player exposing (Player(..))
 import Ply exposing (Ply)
-import Square exposing (File, Rank, Square)
+import Square exposing (Square)
 
 
 type alias Position =

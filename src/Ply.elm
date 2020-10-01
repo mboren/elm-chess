@@ -1,6 +1,5 @@
 module Ply exposing (..)
 
-import EverySet
 import Piece exposing (Piece)
 import Player exposing (Player)
 import Square exposing (Square)

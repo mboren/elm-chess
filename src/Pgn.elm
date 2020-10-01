@@ -1,7 +1,7 @@
 module Pgn exposing (..)
 
 import Parser exposing (..)
-import Piece exposing (Piece)
+import Piece
 import Square exposing (Square)
 
 
