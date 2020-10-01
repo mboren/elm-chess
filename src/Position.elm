@@ -297,33 +297,7 @@ getPossiblePawnMoves player square position =
 
         enpassant : Maybe Ply
         enpassant =
-            let
-                lp =
-                    History.getLastPly position.history
-            in
-            case lp of
-                Nothing ->
-                    Nothing
-
-                Just (Ply.StandardMove data) ->
-                    let
-                        prevDistance =
-                            abs (data.end.rank - data.start.rank)
-
-                        fileDelta =
-                            abs (data.start.file - square.file)
-
-                        fifthRank =
-                            Player.lastRank player - (3 * direction)
-                    in
-                    if data.piece.kind == Piece.Pawn && prevDistance == 2 && fileDelta == 1 && square.rank == fifthRank then
-                        Just (Ply.EnPassant { player = player, start = square, end = Square (square.rank + direction) data.end.file, takenPawn = data.end })
-
-                    else
-                        Nothing
-
-                _ ->
-                    Nothing
+            Maybe.andThen (getEnpassantPly player square) (History.getLastPly position.history)
 
         captures =
             [ ( direction, -1 ), ( direction, 1 ) ]
@@ -348,6 +322,40 @@ getPossiblePawnMoves player square position =
                 |> List.map Just
     in
     [ enpassant, firstMove, extraMove ] ++ captures |> List.filterMap identity |> EverySet.fromList
+
+
+getEnpassantPly : Player -> Square -> Ply -> Maybe Ply
+getEnpassantPly player startSquare previousPly =
+    case previousPly of
+        Ply.StandardMove data ->
+            let
+                direction =
+                    Player.direction player
+
+                targetMovedTwoRanks =
+                    2 == abs (data.end.rank - data.start.rank)
+
+                targetInAdjacentFile =
+                    1 == abs (data.start.file - startSquare.file)
+
+                fifthRank =
+                    Player.lastRank player - (3 * direction)
+            in
+            if data.piece.kind == Piece.Pawn && targetMovedTwoRanks && targetInAdjacentFile && startSquare.rank == fifthRank then
+                Just
+                    (Ply.EnPassant
+                        { player = player
+                        , start = startSquare
+                        , end = Square (startSquare.rank + direction) data.end.file
+                        , takenPawn = data.end
+                        }
+                    )
+
+            else
+                Nothing
+
+        _ ->
+            Nothing
 
 
 omitAfterOccupied : Position -> Player -> List Square -> List Square
