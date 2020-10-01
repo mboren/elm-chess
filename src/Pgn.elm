@@ -1,7 +1,10 @@
 module Pgn exposing (..)
 
 import Parser exposing (..)
-import Piece
+import Piece exposing (Piece)
+import Player
+import Ply
+import Position exposing (Position)
 import Square exposing (Square)
 
 
@@ -33,9 +36,11 @@ movesHelp plies =
             ]
         |. annotationChars
 
+
 annotationChars : Parser ()
 annotationChars =
-    chompWhile (\c->c == '+' || c == '!' || c == '?' || c == '#')
+    chompWhile (\c -> c == '+' || c == '!' || c == '?' || c == '#')
+
 
 ply : Parser PgnPly
 ply =
@@ -305,23 +310,263 @@ intToRank i =
 parsingErrorToString : DeadEnd -> String
 parsingErrorToString deadEnd =
     let
-        location = "(row " ++ String.fromInt deadEnd.row ++ ", col " ++ String.fromInt deadEnd.col ++ ")"
+        location =
+            "(row " ++ String.fromInt deadEnd.row ++ ", col " ++ String.fromInt deadEnd.col ++ ")"
+
         mainText =
             case deadEnd.problem of
-                Expecting expectedString -> "was expecting to find \"" ++ expectedString ++ "\""
-                ExpectingInt -> "expected an integer"
-                ExpectingSymbol symbol -> "expected the symbol " ++ symbol
-                ExpectingEnd -> "expected the string to end"
-                UnexpectedChar -> "found a character I was not expecting"
-                Problem problemText -> "ran into the error: \"" ++ problemText ++ "\""
-                BadRepeat -> "ran into a BadRepeat (idk what this means)"
-                _ -> "ran into an unexpected problem"
+                Expecting expectedString ->
+                    "was expecting to find \"" ++ expectedString ++ "\""
+
+                ExpectingInt ->
+                    "expected an integer"
+
+                ExpectingSymbol symbol ->
+                    "expected the symbol " ++ symbol
+
+                ExpectingEnd ->
+                    "expected the string to end"
+
+                UnexpectedChar ->
+                    "found a character I was not expecting"
+
+                Problem problemText ->
+                    "ran into the error: \"" ++ problemText ++ "\""
+
+                BadRepeat ->
+                    "ran into a BadRepeat (idk what this means)"
+
+                _ ->
+                    "ran into an unexpected problem"
     in
     "I " ++ mainText ++ " at " ++ location
 
+
 parsingErrorsToString : List DeadEnd -> String
 parsingErrorsToString errors =
-    List.map (parsingErrorToString) errors
-    |> String.join ", "
+    List.map parsingErrorToString errors
+        |> String.join ", "
 
 
+toPosition : String -> Result String Position
+toPosition text =
+    if String.isEmpty text then
+        Ok Position.initial
+
+    else
+        let
+            parsedPlies =
+                Parser.run moves text
+        in
+        case parsedPlies of
+            Ok plies ->
+                List.foldl applyPgnPly (Ok Position.initial) plies
+
+            Err err ->
+                Err (parsingErrorsToString err)
+
+
+applyPgnPly : PgnPly -> Result String Position -> Result String Position
+applyPgnPly p position =
+    case position of
+        Err e ->
+            Err e
+
+        Ok pos ->
+            let
+                player =
+                    pos.playerToMove
+
+                plyResult =
+                    case p of
+                        KingsideCastle ->
+                            Ok (Ply.KingsideCastle pos.playerToMove)
+
+                        QueensideCastle ->
+                            Ok (Ply.QueensideCastle pos.playerToMove)
+
+                        PawnAdvance endSquare maybePromotion ->
+                            case Position.findPawnThatCanMoveToSquare endSquare pos of
+                                Nothing ->
+                                    Err ("can't find pawn that can move to " ++ Square.toString endSquare)
+
+                                Just startSquare ->
+                                    Ok (Ply.StandardMove { player = pos.playerToMove, piece = Piece Piece.Pawn pos.playerToMove, start = startSquare, end = endSquare, takes = Nothing, promotion = Maybe.map (\kind -> Piece kind pos.playerToMove) maybePromotion })
+
+                        PawnCapture data ->
+                            let
+                                direction =
+                                    Player.direction pos.playerToMove
+
+                                pawnSquare =
+                                    Square (data.end.rank - direction) data.startFile
+
+                                capturedPiece =
+                                    Position.get pos data.end
+
+                                enPassantCaptureSquare =
+                                    Square pawnSquare.rank data.end.file
+
+                                enPassantCapture =
+                                    Position.get pos enPassantCaptureSquare
+                            in
+                            case capturedPiece of
+                                Nothing ->
+                                    case enPassantCapture of
+                                        Nothing ->
+                                            Err ("No piece at " ++ Square.toString data.end ++ ", or " ++ Square.toString enPassantCaptureSquare ++ " to capture")
+
+                                        Just cp ->
+                                            if cp.kind == Piece.Pawn then
+                                                Ok
+                                                    (Ply.EnPassant
+                                                        { player = player
+                                                        , start = pawnSquare
+                                                        , end = data.end
+                                                        , takenPawn = Square pawnSquare.rank data.end.file
+                                                        }
+                                                    )
+
+                                            else
+                                                Err ("No piece at " ++ Square.toString data.end ++ " to capture")
+
+                                Just cp ->
+                                    Ok (Ply.StandardMove { player = pos.playerToMove, piece = Piece Piece.Pawn pos.playerToMove, start = pawnSquare, end = data.end, takes = capturedPiece, promotion = Maybe.map (\kind -> Piece kind pos.playerToMove) data.promotion })
+
+                        Standard data ->
+                            let
+                                possibleStartSquares =
+                                    Position.findPieces (Piece data.pieceKind pos.playerToMove) pos |> List.filter (\s -> Position.canPieceMoveBetweenSquares pos s data.end)
+
+                                maybeTakenPiece =
+                                    Position.get pos data.end
+                            in
+                            case maybeTakenPiece of
+                                Just takenPiece ->
+                                    Err ("Non-capturing move ends up on a square (" ++ Square.toString data.end ++ ") with a piece on it")
+
+                                -- if there was actually a piece there to take, something is wrong
+                                Nothing ->
+                                    case ( data.startRank, data.startFile ) of
+                                        ( Just sr, Just sf ) ->
+                                            if List.member (Square sr sf) possibleStartSquares then
+                                                Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr sf, end = data.end, takes = Nothing, promotion = Nothing })
+
+                                            else
+                                                Err ("(r,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                        ( Just sr, Nothing ) ->
+                                            let
+                                                candidates =
+                                                    List.filter (.rank >> (==) sr) possibleStartSquares
+                                            in
+                                            case candidates of
+                                                [] ->
+                                                    Err ("(r,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                                [ h ] ->
+                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr h.file, end = data.end, takes = Nothing, promotion = Nothing })
+
+                                                h :: t ->
+                                                    Err ("(r,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                        ( Nothing, Just sf ) ->
+                                            let
+                                                candidates =
+                                                    List.filter (.file >> (==) sf) possibleStartSquares
+                                            in
+                                            case candidates of
+                                                [] ->
+                                                    Err ("(_,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                                [ h ] ->
+                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square h.rank sf, end = data.end, takes = Nothing, promotion = Nothing })
+
+                                                h :: t ->
+                                                    Err ("(_,f) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                        ( Nothing, Nothing ) ->
+                                            case possibleStartSquares of
+                                                [] ->
+                                                    Err ("(_,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                                [ h ] ->
+                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = h, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+
+                                                h :: t ->
+                                                    Err ("(_,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                        Capture data ->
+                            let
+                                possibleStartSquares =
+                                    Position.findPieces (Piece data.pieceKind pos.playerToMove) pos |> List.filter (\s -> Position.canPieceMoveBetweenSquares pos s data.end)
+
+                                maybeTakenPiece =
+                                    Position.get pos data.end
+                            in
+                            case maybeTakenPiece of
+                                Nothing ->
+                                    Err ("No piece to take at " ++ Square.toString data.end)
+
+                                -- if there wasnt actually a piece there to take, something is wrong
+                                Just takenPiece ->
+                                    case ( data.startRank, data.startFile ) of
+                                        ( Just sr, Just sf ) ->
+                                            if List.member (Square sr sf) possibleStartSquares then
+                                                Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr sf, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+
+                                            else
+                                                Err ("(r,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                        ( Just sr, Nothing ) ->
+                                            let
+                                                candidates =
+                                                    List.filter (.rank >> (==) sr) possibleStartSquares
+                                            in
+                                            case candidates of
+                                                [] ->
+                                                    Err ("(r,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                                [ h ] ->
+                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square sr h.file, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+
+                                                h :: t ->
+                                                    Err ("(r,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                        ( Nothing, Just sf ) ->
+                                            let
+                                                candidates =
+                                                    List.filter (.file >> (==) sf) possibleStartSquares
+                                            in
+                                            case candidates of
+                                                [] ->
+                                                    Err ("(_,f) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                                [ h ] ->
+                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = Square h.rank sf, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+
+                                                h :: t ->
+                                                    Err ("(_,f) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                        ( Nothing, Nothing ) ->
+                                            case possibleStartSquares of
+                                                [] ->
+                                                    Err ("(_,_) There is no " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+
+                                                [ h ] ->
+                                                    Ok (Ply.StandardMove { player = player, piece = Piece data.pieceKind player, start = h, end = data.end, takes = maybeTakenPiece, promotion = Nothing })
+
+                                                h :: t ->
+                                                    Err ("(_,_) There are multiple " ++ Piece.pieceKindToString data.pieceKind ++ " that can move to " ++ Square.toString data.end)
+            in
+            case plyResult of
+                Err e ->
+                    Err e
+
+                Ok parsedPly ->
+                    case Position.isPlyValid parsedPly pos of
+                        Ok _ ->
+                            Position.makeMove pos parsedPly |> Result.fromMaybe "Failed to make move!"
+
+                        Err err ->
+                            Err err

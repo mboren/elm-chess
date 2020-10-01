@@ -11,6 +11,7 @@ import Element.Font as Font
 import Element.Input
 import EverySet exposing (EverySet)
 import History
+import Pgn
 import Piece exposing (Piece, PieceKind(..))
 import Player exposing (Player(..))
 import Ply exposing (Ply(..))
@@ -162,7 +163,7 @@ update msg model =
             ( newModel, Cmd.none )
 
         UpdatePgnInput text ->
-            case Position.fromPgn text of
+            case Pgn.toPosition text of
                 Ok newPosition ->
                     ( { model | pgnInput = text, pgnParsingError = Nothing, position = newPosition }, Cmd.none )
 

@@ -3,6 +3,7 @@ module TestPosition exposing (..)
 import Array
 import EverySet
 import Expect exposing (Expectation)
+import Pgn
 import Piece exposing (Piece, PieceKind(..))
 import Player exposing (Player(..))
 import Ply exposing (Ply(..))
@@ -63,7 +64,7 @@ enPassantPossiblePositionErrorCase =
 stalematePosition =
     let
         parsedPosition =
-            Position.fromPgn """1. c4 Nf6 2. d4 e6 3. Nc3 Bb4 4. e3 c5 5. Nge2 d5 6. a3 Bxc3
+            Pgn.toPosition """1. c4 Nf6 2. d4 e6 3. Nc3 Bb4 4. e3 c5 5. Nge2 d5 6. a3 Bxc3
 7. Nxc3 cxd4 8. exd4 dxc4 9. Bxc4 Nc6 10. Be3 O-O 11. O-O b6
 12. Qd3 Bb7 13. Rad1 h6 14. f3 Ne7 15. Bf2 Nfd5 16. Ba2 Nf4
 17. Qd2 Nfg6 18. Bb1 Qd7 19. h4 Rfd8 20. h5 Nf8 21. Bh4 f6

@@ -347,10 +347,10 @@ suite =
         , describe "fromPgn"
             [ test "Initial position" <|
                 \_ ->
-                    Expect.equal (Position.fromPgn "") (Ok Position.initial)
+                    Expect.equal (Pgn.toPosition "") (Ok Position.initial)
             , test "garbage" <|
                 \_ ->
-                    Expect.err (Position.fromPgn "asdfasdf")
+                    Expect.err (Pgn.toPosition "asdfasdf")
             , test "Single ply" <|
                 \_ ->
                     let
@@ -358,7 +358,7 @@ suite =
                             Position.makeMove Position.initial (basicPly (Square 1 4) (Square 3 4) Pawn White)
                                 |> Result.fromMaybe ""
                     in
-                    Expect.equal (Position.fromPgn "1. e4") expectedPosition
+                    Expect.equal (Pgn.toPosition "1. e4") expectedPosition
             , test "Single unambiguous knight move without start coordinates" <|
                 \_ ->
                     let
@@ -366,7 +366,7 @@ suite =
                             Position.makeMove Position.initial (basicPly (Square 0 6) (Square 2 5) Piece.Knight White)
                                 |> Result.fromMaybe ""
                     in
-                    Expect.equal (Position.fromPgn "1. Nf3") expectedPosition
+                    Expect.equal (Pgn.toPosition "1. Nf3") expectedPosition
             , test "Single unambiguous knight move with start coordinates" <|
                 \_ ->
                     let
@@ -374,7 +374,7 @@ suite =
                             Position.makeMove Position.initial (basicPly (Square 0 6) (Square 2 5) Piece.Knight White)
                                 |> Result.fromMaybe ""
                     in
-                    Expect.equal (Position.fromPgn "1. Ng1f3") expectedPosition
+                    Expect.equal (Pgn.toPosition "1. Ng1f3") expectedPosition
             , test "Two plies" <|
                 \_ ->
                     let
@@ -383,7 +383,7 @@ suite =
                                 |> Maybe.andThen (\x -> Position.makeMove x (basicPly (Square 6 4) (Square 4 4) Pawn Player.Black))
                                 |> Result.fromMaybe ""
                     in
-                    Expect.equal (Position.fromPgn "1. e4 e5") expectedPosition
+                    Expect.equal (Pgn.toPosition "1. e4 e5") expectedPosition
             , test "Three plies" <|
                 \_ ->
                     let
@@ -393,32 +393,32 @@ suite =
                                 |> Maybe.andThen (\x -> Position.makeMove x (basicPly (Square 0 5) (Square 4 1) Bishop White))
                                 |> Result.fromMaybe ""
                     in
-                    Expect.equal (Position.fromPgn "1. e4 e5 2. Bb5") expectedPosition
+                    Expect.equal (Pgn.toPosition "1. e4 e5 2. Bb5") expectedPosition
             , test "Single invalid ply" <|
                 \_ ->
-                    Expect.err (Position.fromPgn "1. e5")
+                    Expect.err (Pgn.toPosition "1. e5")
             , test "Ambiguous knight move without start pos should error" <|
                 \_ ->
-                    Expect.err (Position.fromPgn "1. Nf3 a6 2. Nc3 a5 3. Nd4 a4 4. Nb5")
+                    Expect.err (Pgn.toPosition "1. Nf3 a6 2. Nc3 a5 3. Nd4 a4 4. Nb5")
             , test "Ambiguous queen move without start pos should error" <|
                 \_ ->
-                    Expect.err (Position.fromPgn "1. d4 d6 2. d5 Be6 3. Bf4 Bf5 4. Bxd6 Be6 5. Bc5 Ng8h6 6. Be3 Nh6g4 7. Bd2 Qd6 8. Be3 Qe5 9. Bd2 Bf5 10. Be3 c5 11. dxc6 b6 12. c7 b5 13. c8=Q Bxc8 14. Nb1c3 b4 15. Nc3d5 b3 16. Nd5b4 bxc2 17. Nb4c6 c1=Q 18. Nc6a5 Qc5")
+                    Expect.err (Pgn.toPosition "1. d4 d6 2. d5 Be6 3. Bf4 Bf5 4. Bxd6 Be6 5. Bc5 Ng8h6 6. Be3 Nh6g4 7. Bd2 Qd6 8. Be3 Qe5 9. Bd2 Bf5 10. Be3 c5 11. dxc6 b6 12. c7 b5 13. c8=Q Bxc8 14. Nb1c3 b4 15. Nc3d5 b3 16. Nd5b4 bxc2 17. Nb4c6 c1=Q 18. Nc6a5 Qc5")
             , test "Ambiguous knight move with start pos should succeed" <|
                 \_ ->
-                    Expect.ok (Position.fromPgn "1. Nf3 a6 2. Nc3 a5 3. Nd4 a4 4. Nc3b5")
+                    Expect.ok (Pgn.toPosition "1. Nf3 a6 2. Nc3 a5 3. Nd4 a4 4. Nc3b5")
             , test "Ruy lopez with white kingside castle" <|
                 \_ ->
-                    Expect.equal (Ok ruyLopezWithWhiteKingsideCastlePosition) (Position.fromPgn "1. e4 e5 2. Ng1f3 Nb8c6 3. Bb5 a6 4. Ba4 b5 5. Bb3 Ng8f6 6. Nb1c3 d5 7. O-O")
+                    Expect.equal (Ok ruyLopezWithWhiteKingsideCastlePosition) (Pgn.toPosition "1. e4 e5 2. Ng1f3 Nb8c6 3. Bb5 a6 4. Ba4 b5 5. Bb3 Ng8f6 6. Nb1c3 d5 7. O-O")
             , test "Ruy lopez with invalid white queenside castle should fail" <|
                 \_ ->
-                    Expect.err (Position.fromPgn "1. e4 e5 2. Ng1f3 Nb8c6 3. Bb5 a6 4. Ba4 b5 5. Bb3 Ng8f6 6. Nb1c3 d5 7. O-O-O")
+                    Expect.err (Pgn.toPosition "1. e4 e5 2. Ng1f3 Nb8c6 3. Bb5 a6 4. Ba4 b5 5. Bb3 Ng8f6 6. Nb1c3 d5 7. O-O-O")
             , test "Pawn captures on both sides" <|
                 \_ ->
-                    Expect.equal (Ok pawnCapture) (Position.fromPgn "1. e4 d5 2. exd5 e6 3. d6 cxd6")
+                    Expect.equal (Ok pawnCapture) (Pgn.toPosition "1. e4 d5 2. exd5 e6 3. d6 cxd6")
             , test "En passant (without e.p.)" <|
                 \_ ->
-                    Expect.equal (Ok enPassant) (Position.fromPgn "1. e4 Nb8c6 2. e5 d5 3. exd6")
+                    Expect.equal (Ok enPassant) (Pgn.toPosition "1. e4 Nb8c6 2. e5 d5 3. exd6")
             , describe "auto test" <|
-                List.map (\testCase -> test testCase.text <| \_ -> Expect.equal (Ok testCase.position) (Position.fromPgn testCase.text)) autoTestCases
+                List.map (\testCase -> test testCase.text <| \_ -> Expect.equal (Ok testCase.position) (Pgn.toPosition testCase.text)) autoTestCases
             ]
         ]
