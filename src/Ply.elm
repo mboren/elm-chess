@@ -30,10 +30,6 @@ type Ply
     | EnPassant EnPassantData
 
 
-
---= Ply {start:Square, end:Square} | QueensideCastle Player | KingsideCastle Player | Promotion {start:Square, end:Square, promotion:Piece} | EnPassant {start:Square,end:Square}
-
-
 getPlayer : Ply -> Player
 getPlayer ply =
     case ply of
@@ -114,84 +110,6 @@ getEnd ply =
             { rank = Player.firstRank player, file = 6 }
 
 
-getPieceKind : Ply -> Piece.PieceKind
-getPieceKind ply =
-    case ply of
-        StandardMove data ->
-            data.piece.kind
-
-        EnPassant _ ->
-            Piece.Pawn
-
-        QueensideCastle _ ->
-            Piece.King
-
-        KingsideCastle _ ->
-            Piece.King
-
-
-toString : Ply -> String
-toString move =
-    case move of
-        StandardMove data ->
-            let
-                pieceString =
-                    case data.piece.kind of
-                        Piece.Pawn ->
-                            case data.takes of
-                                Nothing ->
-                                    ""
-
-                                Just _ ->
-                                    Square.fileToString data.start.file
-
-                        _ ->
-                            Piece.pieceKindToString data.piece.kind |> String.toUpper
-
-                context =
-                    {- With rooks and knights there can be situations where just giving the piece name and end
-                       square is ambiguous. For proper notation, we would only provide the minimum amount of information
-                       necessary to resolve ambiguity (in order of preference: Nothing, only rank, only file, both rank and
-                       file), but for now i'm just going to add both every time.
-                    -}
-                    case data.piece.kind of
-                        Piece.Rook ->
-                            Square.toString data.start
-
-                        Piece.Knight ->
-                            Square.toString data.start
-
-                        _ ->
-                            ""
-
-                takesString =
-                    case data.takes of
-                        Nothing ->
-                            ""
-
-                        Just _ ->
-                            "x"
-
-                destinationString =
-                    Square.toString data.end
-
-                promotionString =
-                    Maybe.map (.kind >> Piece.pieceKindToString >> String.toUpper >> (\x -> "=" ++ x)) data.promotion
-                        |> Maybe.withDefault ""
-            in
-            pieceString ++ context ++ takesString ++ destinationString ++ promotionString
-
-        EnPassant data ->
-            [ Square.fileToString data.start.file, "x", Square.toString data.end ]
-                |> String.join ""
-
-        QueensideCastle _ ->
-            "O-O-O"
-
-        KingsideCastle _ ->
-            "O-O"
-
-
 toThreat : Ply -> Maybe Square
 toThreat ply =
     case ply of
@@ -229,7 +147,7 @@ getMoveAssociatedWithSquare plies square =
     plies
         |> List.map (\ply -> ( toSquareForMoveSelection ply, ply ))
         |> List.filter
-            (\( sq, ply ) -> sq == square )
+            (\( sq, ply ) -> sq == square)
         |> (\l ->
                 case l of
                     [] ->
