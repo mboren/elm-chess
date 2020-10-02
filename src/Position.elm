@@ -97,16 +97,6 @@ isPlyValid ply position =
         Err "Illegal ply"
 
 
-doesCurrentPlayerHavePawnOnSquare : Square -> Position -> Bool
-doesCurrentPlayerHavePawnOnSquare square position =
-    case get position square of
-        Nothing ->
-            False
-
-        Just p ->
-            p.kind == Piece.Pawn && p.color == position.playerToMove
-
-
 findPawnThatCanMoveToSquare : Square -> Position -> Maybe Square
 findPawnThatCanMoveToSquare square position =
     let
@@ -147,6 +137,16 @@ findPawnThatCanMoveToSquare square position =
 
                         else
                             Nothing
+
+
+doesCurrentPlayerHavePawnOnSquare : Square -> Position -> Bool
+doesCurrentPlayerHavePawnOnSquare square position =
+    case get position square of
+        Nothing ->
+            False
+
+        Just p ->
+            p.kind == Piece.Pawn && p.color == position.playerToMove
 
 
 canKingsideCastle : Position -> Bool
@@ -258,142 +258,6 @@ isSquareOccupiedByPlayer position player square =
             p.color == player
 
 
-omitIfOccupiedByPlayer : Position -> Player -> Maybe Square -> Maybe Square
-omitIfOccupiedByPlayer position player maybeSquare =
-    case maybeSquare of
-        Nothing ->
-            Nothing
-
-        Just sq ->
-            if isSquareOccupiedByPlayer position player sq then
-                Nothing
-
-            else
-                maybeSquare
-
-
-omitIfNotOccupiedByPlayer : Position -> Player -> Maybe Square -> Maybe Square
-omitIfNotOccupiedByPlayer position player maybeSquare =
-    case maybeSquare of
-        Nothing ->
-            Nothing
-
-        Just sq ->
-            if isSquareOccupiedByPlayer position player sq then
-                maybeSquare
-
-            else
-                Nothing
-
-
-getPossiblePawnMoves : Player -> Square -> Position -> EverySet Ply
-getPossiblePawnMoves player square position =
-    let
-        direction =
-            Player.direction player
-
-        firstMove =
-            let
-                candidate =
-                    { square | rank = square.rank + direction }
-
-                promotion =
-                    if candidate.rank == Player.lastRank player then
-                        Just (Piece Piece.Queen player)
-
-                    else
-                        Nothing
-            in
-            if isSquareOccupied candidate position then
-                Nothing
-
-            else
-                Just (Ply.Standard { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = promotion })
-
-        extraMove =
-            -- this checks for being blocked.
-            case firstMove of
-                Nothing ->
-                    Nothing
-
-                _ ->
-                    if hasPawnMovedBefore player square then
-                        Nothing
-
-                    else
-                        let
-                            candidate =
-                                { square | rank = square.rank + 2 * direction }
-                        in
-                        if isSquareOccupied candidate position then
-                            Nothing
-
-                        else
-                            Just (Ply.Standard { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = Nothing })
-
-        enpassant : Maybe Ply
-        enpassant =
-            Maybe.andThen (getEnpassantPly player square) (History.getLastPly position.history)
-
-        captures =
-            [ ( direction, -1 ), ( direction, 1 ) ]
-                |> List.map (Square.offset square)
-                |> List.filterMap (omitIfNotOccupiedByPlayer position (Player.otherPlayer position.playerToMove))
-                |> List.map
-                    (\s ->
-                        Ply.Standard
-                            { player = player
-                            , piece = Piece Piece.Pawn player
-                            , start = square
-                            , end = s
-                            , takes = get position s
-                            , promotion =
-                                if s.rank == Player.lastRank player then
-                                    Just (Piece Piece.Queen player)
-
-                                else
-                                    Nothing
-                            }
-                    )
-                |> List.map Just
-    in
-    [ enpassant, firstMove, extraMove ] ++ captures |> List.filterMap identity |> EverySet.fromList
-
-
-getEnpassantPly : Player -> Square -> Ply -> Maybe Ply
-getEnpassantPly player startSquare previousPly =
-    case previousPly of
-        Ply.Standard data ->
-            let
-                direction =
-                    Player.direction player
-
-                targetMovedTwoRanks =
-                    2 == abs (data.end.rank - data.start.rank)
-
-                targetInAdjacentFile =
-                    1 == abs (data.start.file - startSquare.file)
-
-                fifthRank =
-                    Player.lastRank player - (3 * direction)
-            in
-            if data.piece.kind == Piece.Pawn && targetMovedTwoRanks && targetInAdjacentFile && startSquare.rank == fifthRank then
-                Just
-                    (Ply.EnPassant
-                        { player = player
-                        , start = startSquare
-                        , end = Square (startSquare.rank + direction) data.end.file
-                        , takenPawn = data.end
-                        }
-                    )
-
-            else
-                Nothing
-
-        _ ->
-            Nothing
-
-
 omitAfterOccupied : Position -> Player -> List Square -> List Square
 omitAfterOccupied position player squares =
     case squares of
@@ -409,23 +273,6 @@ omitAfterOccupied position player squares =
 
             else
                 h :: omitAfterOccupied position player t
-
-
-generateSquaresAlongVector : Player -> Square -> Position -> Int -> ( Int, Int ) -> EverySet Square
-generateSquaresAlongVector player square position maxHops vec =
-    -- assumes we can take along this vector
-    -- generate all the moves
-    -- recurse over the list to remove all after we hit another piece. if the piece is our own color, that square is omitted. if it's another, it is included
-    let
-        multiplyVector ( dr, df ) hops =
-            ( dr * hops, df * hops )
-    in
-    List.range 1 maxHops
-        |> List.map (multiplyVector vec)
-        |> List.map (Square.offset square)
-        |> List.filterMap identity
-        |> omitAfterOccupied position player
-        |> EverySet.fromList
 
 
 convertEndSquareToStandardMove : Position -> Player -> Piece -> Square -> Square -> Ply
@@ -629,6 +476,159 @@ getPossibleKingMoves includeCastling player position square =
     possibilities
         |> (++) kingSideCastle
         |> (++) queenSideCastle
+        |> EverySet.fromList
+
+
+getPossiblePawnMoves : Player -> Square -> Position -> EverySet Ply
+getPossiblePawnMoves player square position =
+    let
+        direction =
+            Player.direction player
+
+        firstMove =
+            let
+                candidate =
+                    { square | rank = square.rank + direction }
+
+                promotion =
+                    if candidate.rank == Player.lastRank player then
+                        Just (Piece Piece.Queen player)
+
+                    else
+                        Nothing
+            in
+            if isSquareOccupied candidate position then
+                Nothing
+
+            else
+                Just (Ply.Standard { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = promotion })
+
+        extraMove =
+            -- this checks for being blocked.
+            case firstMove of
+                Nothing ->
+                    Nothing
+
+                _ ->
+                    if hasPawnMovedBefore player square then
+                        Nothing
+
+                    else
+                        let
+                            candidate =
+                                { square | rank = square.rank + 2 * direction }
+                        in
+                        if isSquareOccupied candidate position then
+                            Nothing
+
+                        else
+                            Just (Ply.Standard { player = player, piece = Piece Piece.Pawn player, start = square, end = candidate, takes = Nothing, promotion = Nothing })
+
+        enpassant : Maybe Ply
+        enpassant =
+            Maybe.andThen (getEnpassantPly player square) (History.getLastPly position.history)
+
+        captures =
+            [ ( direction, -1 ), ( direction, 1 ) ]
+                |> List.map (Square.offset square)
+                |> List.filterMap (omitIfNotOccupiedByPlayer position (Player.otherPlayer position.playerToMove))
+                |> List.map
+                    (\s ->
+                        Ply.Standard
+                            { player = player
+                            , piece = Piece Piece.Pawn player
+                            , start = square
+                            , end = s
+                            , takes = get position s
+                            , promotion =
+                                if s.rank == Player.lastRank player then
+                                    Just (Piece Piece.Queen player)
+
+                                else
+                                    Nothing
+                            }
+                    )
+                |> List.map Just
+    in
+    [ enpassant, firstMove, extraMove ] ++ captures |> List.filterMap identity |> EverySet.fromList
+
+
+getEnpassantPly : Player -> Square -> Ply -> Maybe Ply
+getEnpassantPly player startSquare previousPly =
+    case previousPly of
+        Ply.Standard data ->
+            let
+                direction =
+                    Player.direction player
+
+                targetMovedTwoRanks =
+                    2 == abs (data.end.rank - data.start.rank)
+
+                targetInAdjacentFile =
+                    1 == abs (data.start.file - startSquare.file)
+
+                fifthRank =
+                    Player.lastRank player - (3 * direction)
+            in
+            if data.piece.kind == Piece.Pawn && targetMovedTwoRanks && targetInAdjacentFile && startSquare.rank == fifthRank then
+                Just
+                    (Ply.EnPassant
+                        { player = player
+                        , start = startSquare
+                        , end = Square (startSquare.rank + direction) data.end.file
+                        , takenPawn = data.end
+                        }
+                    )
+
+            else
+                Nothing
+
+        _ ->
+            Nothing
+
+
+omitIfNotOccupiedByPlayer : Position -> Player -> Maybe Square -> Maybe Square
+omitIfNotOccupiedByPlayer position player maybeSquare =
+    case maybeSquare of
+        Nothing ->
+            Nothing
+
+        Just sq ->
+            if isSquareOccupiedByPlayer position player sq then
+                maybeSquare
+
+            else
+                Nothing
+
+
+omitIfOccupiedByPlayer : Position -> Player -> Maybe Square -> Maybe Square
+omitIfOccupiedByPlayer position player maybeSquare =
+    case maybeSquare of
+        Nothing ->
+            Nothing
+
+        Just sq ->
+            if isSquareOccupiedByPlayer position player sq then
+                Nothing
+
+            else
+                maybeSquare
+
+
+generateSquaresAlongVector : Player -> Square -> Position -> Int -> ( Int, Int ) -> EverySet Square
+generateSquaresAlongVector player square position maxHops vec =
+    -- assumes we can take along this vector
+    -- generate all the moves
+    -- recurse over the list to remove all after we hit another piece. if the piece is our own color, that square is omitted. if it's another, it is included
+    let
+        multiplyVector ( dr, df ) hops =
+            ( dr * hops, df * hops )
+    in
+    List.range 1 maxHops
+        |> List.map (multiplyVector vec)
+        |> List.map (Square.offset square)
+        |> List.filterMap identity
+        |> omitAfterOccupied position player
         |> EverySet.fromList
 
 
