@@ -29,6 +29,7 @@ type alias Position =
     , board : Array2D (Maybe Piece)
     }
 
+
 initial : Position
 initial =
     { history = History.empty
@@ -577,32 +578,7 @@ getPossibleMoves includeCastling player position square =
                     possibilities |> List.filterMap identity |> EverySet.fromList |> EverySet.map (convertEndSquareToStandardMove position player piece square)
 
                 Piece.King ->
-                    let
-                        queenSideCastle =
-                            if includeCastling && player == position.playerToMove && canQueensideCastle position then
-                                [ Ply.QueensideCastle player ]
-
-                            else
-                                []
-
-                        kingSideCastle =
-                            if includeCastling && player == position.playerToMove && canKingsideCastle position then
-                                [ Ply.KingsideCastle player ]
-
-                            else
-                                []
-
-                        possibilities =
-                            [ ( -1, -1 ), ( -1, 0 ), ( -1, 1 ), ( 0, -1 ), ( 0, 1 ), ( 1, -1 ), ( 1, 0 ), ( 1, 1 ) ]
-                                |> List.map (Square.offset square)
-                                |> List.map (omitIfOccupiedByPlayer position player)
-                    in
-                    possibilities
-                        |> List.filterMap identity
-                        |> List.map (convertEndSquareToStandardMove position player piece square)
-                        |> (++) kingSideCastle
-                        |> (++) queenSideCastle
-                        |> EverySet.fromList
+                    getPossibleKingMoves includeCastling player position square
 
                 Piece.Bishop ->
                     [ ( -1, -1 ), ( -1, 1 ), ( 1, -1 ), ( 1, 1 ) ]
@@ -624,6 +600,36 @@ getPossibleMoves includeCastling player position square =
 
                 Piece.Pawn ->
                     getPossiblePawnMoves player square position
+
+
+getPossibleKingMoves : Bool -> Player -> Position -> Square -> EverySet Ply
+getPossibleKingMoves includeCastling player position square =
+    let
+        queenSideCastle =
+            if includeCastling && player == position.playerToMove && canQueensideCastle position then
+                [ Ply.QueensideCastle player ]
+
+            else
+                []
+
+        kingSideCastle =
+            if includeCastling && player == position.playerToMove && canKingsideCastle position then
+                [ Ply.KingsideCastle player ]
+
+            else
+                []
+
+        possibilities =
+            [ ( -1, -1 ), ( -1, 0 ), ( -1, 1 ), ( 0, -1 ), ( 0, 1 ), ( 1, -1 ), ( 1, 0 ), ( 1, 1 ) ]
+                |> List.map (Square.offset square)
+                |> List.map (omitIfOccupiedByPlayer position player)
+                |> List.filterMap identity
+                |> List.map (convertEndSquareToStandardMove position player (Piece Piece.King player) square)
+    in
+    possibilities
+        |> (++) kingSideCastle
+        |> (++) queenSideCastle
+        |> EverySet.fromList
 
 
 makeMove : Position -> Ply -> Maybe Position
@@ -739,7 +745,6 @@ getRows board =
         |> List.map (Maybe.withDefault (Array.fromList []))
         |> List.map Array.toList
         |> List.reverse
-
 
 
 canPieceMoveBetweenSquares : Position -> Square -> Square -> Bool
