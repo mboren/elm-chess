@@ -29,6 +29,30 @@ type alias Position =
     , board : Array2D (Maybe Piece)
     }
 
+initial : Position
+initial =
+    { history = History.empty
+    , playerToMove = White
+
+    {- i'm still playing with both the Piece type definition and how i'm storing the board
+       so until that settles down
+       i'm just gonna convert from string here, because it's easier to change the function
+       definition than all the dang pieces on the board
+    -}
+    , board =
+        [ [ "R", "N", "B", "Q", "K", "B", "N", "R" ]
+        , [ "P", "P", "P", "P", "P", "P", "P", "P" ]
+        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
+        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
+        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
+        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
+        , [ "p", "p", "p", "p", "p", "p", "p", "p" ]
+        , [ "r", "n", "b", "q", "k", "b", "n", "r" ]
+        ]
+            |> List.map (List.map Piece.fromString)
+            |> Array2D.fromList
+    }
+
 
 get : Position -> Square -> Maybe Piece
 get { board } { rank, file } =
@@ -716,29 +740,6 @@ getRows board =
         |> List.map Array.toList
         |> List.reverse
 
-
-initial =
-    { history = History.empty
-    , playerToMove = White
-
-    {- i'm still playing with both the Piece type definition and how i'm storing the board
-       so until that settles down
-       i'm just gonna convert from string here, because it's easier to change the function
-       definition than all the dang pieces on the board
-    -}
-    , board =
-        [ [ "R", "N", "B", "Q", "K", "B", "N", "R" ]
-        , [ "P", "P", "P", "P", "P", "P", "P", "P" ]
-        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
-        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
-        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
-        , [ " ", " ", " ", " ", " ", " ", " ", " " ]
-        , [ "p", "p", "p", "p", "p", "p", "p", "p" ]
-        , [ "r", "n", "b", "q", "k", "b", "n", "r" ]
-        ]
-            |> List.map (List.map Piece.fromString)
-            |> Array2D.fromList
-    }
 
 
 canPieceMoveBetweenSquares : Position -> Square -> Square -> Bool
