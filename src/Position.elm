@@ -1,4 +1,20 @@
-module Position exposing (..)
+module Position exposing
+    ( Position
+    , aiMove
+    , canPieceMoveBetweenSquares
+    , findPawnThatCanMoveToSquare
+    , findPieces
+    , get
+    , getPossibleMovesForCurrentPlayerWithoutCheck
+    , getRows
+    , getSquaresOccupiedByCurrentPlayer
+    , initial
+    , isCurrentPlayerInCheckMate
+    , isPlyValid
+    , isStalemate
+    , makeMove
+    , toPgn
+    )
 
 {-| This module is responsible for representing the state of the game and moving between game states.
 It also includes operations on other types that needs the Position, to avoid circular dependencies.
