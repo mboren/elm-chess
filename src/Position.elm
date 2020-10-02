@@ -20,12 +20,15 @@ module Position exposing
 It also includes operations on other types that needs the Position, to avoid circular dependencies.
 
 There's a lot going on in here:
-
   - the whole game of chess
   - representing moves as strings
   - rudimentary "AI"
-  - applying the results of parskj
 
+The API exposed by this module and its do-everything nature have a lot of room for improvement.
+
+The state of the game is represented by the piece positions, the move history, and the current player.
+Since we have to frequently iterate over the History to figure things out if things like castling are possible,
+this format is pretty inefficient. So far, this only starts to appear when evaluating moves for the AI.
 -}
 
 import Array
