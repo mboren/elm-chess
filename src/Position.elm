@@ -20,6 +20,7 @@ module Position exposing
 It also includes operations on other types that needs the Position, to avoid circular dependencies.
 
 There's a lot going on in here:
+
   - the whole game of chess
   - representing moves as strings
   - rudimentary "AI"
@@ -29,6 +30,7 @@ The API exposed by this module and its do-everything nature have a lot of room f
 The state of the game is represented by the piece positions, the move history, and the current player.
 Since we have to frequently iterate over the History to figure things out if things like castling are possible,
 this format is pretty inefficient. So far, this only starts to appear when evaluating moves for the AI.
+
 -}
 
 import Array
@@ -74,12 +76,16 @@ initial =
     }
 
 
+{-| Get the piece at the given square
+-}
 get : Position -> Square -> Maybe Piece
 get { board } { rank, file } =
     Array2D.get rank file board
         |> Maybe.withDefault Nothing
 
 
+{-| Find the squares with pieces of the same kind belonging to the same player
+-}
 findPieces : Piece -> Position -> List Square
 findPieces piece position =
     let
@@ -97,6 +103,10 @@ findPieces piece position =
     List.filter (hasPiece position) occupiedSquares
 
 
+{-| Used to test if a potential ply is can be applied to the current Position.
+Intended to be used when parsing plies from text, as the parser is only looking
+at syntactic correctness.
+-}
 isPlyValid : Ply -> Position -> Result String ()
 isPlyValid ply position =
     let
@@ -116,6 +126,9 @@ isPlyValid ply position =
         Err "Illegal ply"
 
 
+{-| If the current player has a pawn that can move to the provided square,
+get the square that it is on.
+-}
 findPawnThatCanMoveToSquare : Square -> Position -> Maybe Square
 findPawnThatCanMoveToSquare square position =
     let
@@ -239,6 +252,8 @@ areSquaresUnoccupied position squares =
     List.map (get position) squares |> List.filterMap identity |> List.isEmpty
 
 
+{-| Get every square that the current player has a piece on
+-}
 getSquaresOccupiedByCurrentPlayer : Position -> EverySet Square
 getSquaresOccupiedByCurrentPlayer position =
     getSquaresOccupiedByPlayer position.playerToMove position
@@ -355,6 +370,8 @@ isPlayerInCheck player position =
             EverySet.member sq otherPlayerPossibleMoves
 
 
+{-| Determine if the game has ended by checkmate.
+-}
 isCurrentPlayerInCheckMate : Position -> Bool
 isCurrentPlayerInCheckMate position =
     isPlayerInCheck position.playerToMove position
@@ -362,6 +379,9 @@ isCurrentPlayerInCheckMate position =
         == generateAllMovesForCurrentPlayerWithoutCheck position
 
 
+{-| Determine if the game has ended by stalemate. A stalemate occurs when the current player is not in check,
+but they have no legal moves.
+-}
 isStalemate : Position -> Bool
 isStalemate position =
     not (isPlayerInCheck position.playerToMove position)
@@ -409,6 +429,9 @@ wouldMoveLeavePlayerInCheck player position ply =
             isPlayerInCheck player pos
 
 
+{-| Get all of the plies that could be chosen by the current player that would not
+leave them in check.
+-}
 getPossibleMovesForCurrentPlayerWithoutCheck : Position -> Square -> EverySet Ply
 getPossibleMovesForCurrentPlayerWithoutCheck position square =
     getPossibleMoves True position.playerToMove position square
@@ -750,13 +773,7 @@ getRows board =
     {- TODO rename this -}
     let
         maybeToBool r =
-            --TODO i'm sure there's a smoother way to do this
-            case r of
-                Just _ ->
-                    True
-
-                Nothing ->
-                    False
+            r /= Nothing
     in
     List.range 0 (Array2D.rows board)
         |> List.map (\i -> Array2D.getRow i board)
@@ -774,6 +791,50 @@ canPieceMoveBetweenSquares position start end =
         |> List.member end
 
 
+{-| Represent the move history as a string. The moves will be represented as they would be in a
+Portable Game Notation (PGN) file.
+-}
+toPgn : Position -> String
+toPgn position =
+    List.foldl toPgnHelp ( initial, [] ) (History.toList position.history)
+        |> Tuple.second
+        |> List.reverse
+        |> String.join " "
+
+
+toPgnHelp : Ply -> ( Position, List String ) -> ( Position, List String )
+toPgnHelp ply ( position, strings ) =
+    let
+        plyText =
+            plyToString position ply
+
+        nextPosition =
+            makeMove position ply
+                |> Maybe.withDefault initial
+
+        moveNumber =
+            if position.playerToMove == Player.White then
+                History.moveNumber nextPosition.history
+                    |> String.fromInt
+                    |> (\i -> i ++ ". ")
+
+            else
+                ""
+    in
+    ( nextPosition, (moveNumber ++ plyText) :: strings )
+
+
+{-| Turn a ply into a string. This is surprisingly complicated because we want to display as little information as
+possible to unambiguously refer to it.
+
+Suppose we have a knight moving to the f3 square:
+
+  - if there's only one knight that can move there, we want to output "Nf3"
+  - if there's another Knight that can move to f3, we want to add either the file or the rank to disambiguate
+    For example, "Naf3" or "N1f3"
+  - if we've promoted some pawns to Knights, we might have to specify both the rank and the file: "Na1f3"
+
+-}
 plyToString : Position -> Ply -> String
 plyToString position ply =
     case ply of
@@ -801,7 +862,7 @@ plyToString position ply =
                 context =
                     case casesToDisambiguate of
                         [] ->
-                            "" |> Debug.log "shouldnt happen"
+                            "" |> Debug.todo "shouldnt happen"
 
                         [ _ ] ->
                             ""
@@ -848,36 +909,15 @@ plyToString position ply =
             "O-O"
 
 
-toPgnHelp : Ply -> ( Position, List String ) -> ( Position, List String )
-toPgnHelp ply ( position, strings ) =
-    let
-        plyText =
-            plyToString position ply
 
-        nextPosition =
-            makeMove position ply
-                |> Maybe.withDefault initial
-
-        moveNumber =
-            if position.playerToMove == Player.White then
-                History.moveNumber nextPosition.history
-                    |> String.fromInt
-                    |> (\i -> i ++ ". ")
-
-            else
-                ""
-    in
-    ( nextPosition, (moveNumber ++ plyText) :: strings )
+-- AI Functions
 
 
-toPgn : Position -> String
-toPgn position =
-    List.foldl toPgnHelp ( initial, [] ) (History.toList position.history)
-        |> Tuple.second
-        |> List.reverse
-        |> String.join " "
-
-
+{-| Pick a ply for the current player and apply it. Plies are ranked based on a bunch of heuristics that assign
+a score to each one, and one is picked by the seed.
+One day, the seed may be used for randomly selecting moves, but for now it serves like an index.
+If the seed is 0, the best move will always be picked.
+-}
 aiMove : Position -> Int -> Position
 aiMove position seed =
     let
